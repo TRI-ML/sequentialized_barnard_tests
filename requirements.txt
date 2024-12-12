@@ -1,0 +1,5 @@
+black
+matplotlib
+numpy>=1.20.0
+scipy
+tqdm
