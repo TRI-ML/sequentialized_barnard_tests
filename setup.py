@@ -9,8 +9,10 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=[
+        "isort",
         "matplotlib",
         "numpy>=1.20",
+        "pytest",
         "scipy",
         "tqdm",
     ],

@@ -4,8 +4,8 @@ This module defines base classes for hypothesis tests.
 """
 
 from abc import ABC, abstractmethod
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
 from typing import Optional, Union
 
 from numpy.typing import ArrayLike
@@ -26,6 +26,8 @@ class TestResult:
     A result must contain a decision. Any auxiliary information will be thrown into
     info as an optional dictionary.
     """
+
+    __test__ = False
 
     decision: Decision
     info: Optional[dict] = None
@@ -74,13 +76,19 @@ class SequentialTwoSampleTestBase(TwoSampleTestBase):
     """Base class for a family of sequential two-sample hypothesis tests."""
 
     def run_on_sequence(
-        self, sequence_0: ArrayLike, sequence_1: ArrayLike
+        self,
+        sequence_0: ArrayLike,
+        sequence_1: ArrayLike,
+        *args,
+        **kwargs,
     ) -> TestResult:
         """Runs the test on a pair of sequential data.
 
         Args:
             sequence_0: Sequence of data from the first source.
             sequence_1: Sequence of data from the second source.
+            args: Additional positional arguments.
+            **kwargs: Additional optional or keyward arguments.
 
         Returns:
             TestResult: Result of the hypothesis test.
@@ -93,20 +101,26 @@ class SequentialTwoSampleTestBase(TwoSampleTestBase):
 
         result = None
         for idx in range(len(sequence_0)):
-            result = self.step(sequence_0[idx], sequence_1[idx])
+            result = self.step(sequence_0[idx], sequence_1[idx], *args, **kwargs)
             if not result == TestResult.FailToDecide:
                 break
         return result
 
     @abstractmethod
     def step(
-        self, datum_0: Union[bool, int, float], datum_1: Union[bool, int, float]
+        self,
+        datum_0: Union[bool, int, float],
+        datum_1: Union[bool, int, float],
+        *args,
+        **kwargs,
     ) -> TestResult:
         """Runs the test on a single pair of data.
 
         Args:
             datum_0: Datum from the first source.
             datum_1: Datum from the second source.
+            args: Additional positional arguments.
+            **kwargs: Additional optional or keyward arguments.
 
         Returns:
             TestResult: Result of the hypothesis test.
