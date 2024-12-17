@@ -102,7 +102,7 @@ class SequentialTwoSampleTestBase(TwoSampleTestBase):
         result = None
         for idx in range(len(sequence_0)):
             result = self.step(sequence_0[idx], sequence_1[idx], *args, **kwargs)
-            if not result == TestResult.FailToDecide:
+            if not result.decision == Decision.FailToDecide:
                 break
         return result
 
