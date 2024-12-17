@@ -40,7 +40,9 @@ class TwoSampleBinomialHypothesis(Enum):
     We assume we have two distributions Bernoulli(p_0) and Bernoulli(p_1). A pair of
     data is drawn independently from the two distributions, one at a time. The first
     hypothesis, `P0LessThanP1`, represents `p_0 < p_1`. The second hypothesis,
-    `P0MoreThanP1`, represents `p_0 > p_1`.
+    `P0MoreThanP1`, represents `p_0 > p_1`. Note that both of these are possible
+    alternative hypotheses in a statistical test, and the user will be tasked with
+    choosing one as their alternative when instantiating a test.
     """
 
     P0LessThanP1 = 0

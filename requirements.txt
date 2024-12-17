@@ -1,3 +1,4 @@
+binomial_cis
 black
 isort
 matplotlib

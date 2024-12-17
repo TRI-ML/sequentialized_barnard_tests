@@ -9,7 +9,7 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=[
-        "isort",
+        "binomial_cis",
         "matplotlib",
         "numpy>=1.20",
         "pytest",
