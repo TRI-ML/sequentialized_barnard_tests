@@ -96,6 +96,7 @@ class SequentialTwoSampleTestBase(TwoSampleTestBase):
         Raises:
             ValueError: If the two sequences do not have the same length.
         """
+        self.reset()
         if not (len(sequence_0) == len(sequence_1)):
             raise (ValueError("The two input sequences must have the same size."))
 
@@ -105,6 +106,10 @@ class SequentialTwoSampleTestBase(TwoSampleTestBase):
             if not result.decision == Decision.FailToDecide:
                 break
         return result
+
+    def reset(self) -> None:
+        """Resets internal memory states of the test."""
+        pass
 
     @abstractmethod
     def step(
