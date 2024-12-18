@@ -9,8 +9,10 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=[
+        "binomial_cis",
         "matplotlib",
         "numpy>=1.20",
+        "pytest",
         "scipy",
         "tqdm",
     ],

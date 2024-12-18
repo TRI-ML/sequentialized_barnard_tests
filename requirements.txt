@@ -1,5 +1,9 @@
+binomial_cis
 black
+isort
 matplotlib
 numpy>=1.20.0
+pre-commit
+pytest
 scipy
 tqdm
