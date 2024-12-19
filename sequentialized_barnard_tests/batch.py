@@ -95,14 +95,14 @@ class MirroredBarnardExactTest(MirroredTestMixin, TestBase):
     (Those standard tests will at most fail to reject the null, as represented by
     Decision.FailToDecide.)
 
-    For example, if alternative is Hypothesis.P0MoreThanP1 and the decision is
+    For example, if the alternative is Hypothesis.P0MoreThanP1 and the decision is
     Decision.AcceptNull, it should be interpreted as accepting Hypothesis.P0LessThanP1.
 
     The significance level alpha controls the following two errors simultaneously: (1)
-    probability of wrongly accepting alternative when null is true, and (2) probability
-    of wrongly accepting null when alternative is true. Note that Bonferroni correction
-    is not needed since the null hypothesis for one test is the alternative for the
-    other.
+    probability of wrongly accepting the alternative when the null is true, and (2)
+    probability of wrongly accepting the null when the alternative is true. Note that
+    Bonferroni correction is not needed since the null hypothesis for one test is the
+    alternative for the other.
 
     Attributes:
         alternative: Specification of the alternative hypothesis.

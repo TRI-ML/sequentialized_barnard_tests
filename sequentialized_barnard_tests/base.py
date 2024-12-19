@@ -155,14 +155,14 @@ class MirroredTestMixin:
     (Those standard tests will at most fail to reject the null, as represented by
     Decision.FailToDecide.)
 
-    For example, if alternative is Hypothesis.P0MoreThanP1 and the decision is
+    For example, if the alternative is Hypothesis.P0MoreThanP1 and the decision is
     Decision.AcceptNull, it should be interpreted as accepting Hypothesis.P0LessThanP1.
 
     The significance level alpha controls the following two errors simultaneously: (1)
-    probability of wrongly accepting alternative when null is true, and (2) probability
-    of wrongly accepting null when alternative is true. Note that Bonferroni correction
-    is not needed since the null hypothesis for one test is the alternative for the
-    other.
+    probability of wrongly accepting the alternative when the null is true, and (2)
+    probability of wrongly accepting the null when the alternative is true. Note that
+    Bonferroni correction is not needed since the null hypothesis for one test is the
+    alternative for the other.
 
     Attributes:
         It has the same attributes as the underlying base tests.
@@ -172,7 +172,7 @@ class MirroredTestMixin:
         None  # To be set by subclasses.
     )
 
-    def __init__(self, alternative: Hypothesis, *args, **kwargs):
+    def __init__(self, alternative: Hypothesis, *args, **kwargs) -> None:
         """Initializes the MirroredTestMixin object.
 
         It instantiates two private member variables, _test_for_alternative and
@@ -184,19 +184,21 @@ class MirroredTestMixin:
             **kwargs: Additional optional or keyward arguments (if any).
 
         Raises:
-            ValueError: If alternative is not a valid Hypothesis for a mirrored test.
+            AttributeError: If alternative is not a valid Hypothesis for a mirrored test.
         """
         if alternative == Hypothesis.P0MoreThanP1:
             null = Hypothesis.P0LessThanP1
         elif alternative == Hypothesis.P0LessThanP1:
             null = Hypothesis.P0MoreThanP1
         else:
-            raise (ValueError(f"{alternative} is not a valid value for alternative."))
+            raise (
+                AttributeError(f"{alternative} is not a valid value for alternative.")
+            )
 
         self._test_for_alternative = self._base_class(alternative, *args, **kwargs)
         self._test_for_null = self._base_class(null, *args, **kwargs)
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> Any:
         """Dynamically forward attributes from the underlying base tests.
 
         Args:
@@ -213,7 +215,7 @@ class MirroredTestMixin:
                 f"'{self.__class__.__name__}' object has no attribute '{name}'"
             )
 
-    def __setattr__(self, name: str, value: Any):
+    def __setattr__(self, name: str, value: Any) -> None:
         """Dynamically set attributes to the underlying base tests.
 
         Args:
@@ -236,7 +238,7 @@ class MirroredTestMixin:
             self._test_for_null.alternative = null
         else:
             # If setting attributes after initialization, set on both
-            # test_for_alternative and test_for_null.
+            # _test_for_alternative and _test_for_null.
             if name not in ["_test_for_alternative", "_test_for_null", "_base_class"]:
                 if hasattr(self._test_for_alternative, name):
                     setattr(self._test_for_alternative, name, value)
