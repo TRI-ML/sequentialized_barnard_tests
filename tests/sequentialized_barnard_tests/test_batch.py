@@ -9,10 +9,12 @@ from sequentialized_barnard_tests.batch import (
     MirroredBarnardExactTest,
 )
 
+##### Barnard's Test #####
+
 
 @pytest.fixture(scope="module")
 def barnard(request):
-    test = BarnardExactTest(alpha=0.05, alternative=request.param)
+    test = BarnardExactTest(alternative=request.param, alpha=0.05)
     return test
 
 
@@ -50,8 +52,11 @@ def test_barnard(barnard, sequence_0, sequence_1, expected):
     assert result.decision == expected
 
 
-def test_mirrored_barnard_properties():
-    test = MirroredBarnardExactTest(alpha=0.05, alternative=Hypothesis.P0MoreThanP1)
+##### Mirrored Barnard's Test #####
+
+
+def test_mirrored_barnard_attribute_assignment():
+    test = MirroredBarnardExactTest(alternative=Hypothesis.P0MoreThanP1, alpha=0.05)
     assert test.alpha == 0.05
     assert test._test_for_alternative.alpha == test.alpha
     assert test._test_for_null.alpha == test.alpha
@@ -72,7 +77,7 @@ def test_mirrored_barnard_properties():
 
 @pytest.fixture(scope="module")
 def mirrored_barnard(request):
-    test = MirroredBarnardExactTest(alpha=0.05, alternative=request.param)
+    test = MirroredBarnardExactTest(alternative=request.param, alpha=0.05)
     return test
 
 
