@@ -6,7 +6,7 @@ This module defines base classes for hypothesis tests.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Union
+from typing import Any, Optional, Type, Union
 
 from numpy.typing import ArrayLike
 
@@ -57,13 +57,20 @@ class TwoSampleTestBase(ABC):
 
     @abstractmethod
     def run_on_sequence(
-        self, sequence_0: ArrayLike, sequence_1: ArrayLike
+        self,
+        sequence_0: ArrayLike,
+        sequence_1: ArrayLike,
+        *args,
+        **kwargs,
     ) -> TestResult:
         """Runs the test on a pair of sequential data.
 
         Args:
             sequence_0: Sequence of data from the first source.
             sequence_1: Sequence of data from the second source.
+            *args: Additional positional arguments (if any).
+            **kwargs: Additional optional or keyward arguments (if any).
+
 
         Returns:
             TestResult: Result of the hypothesis test.
@@ -89,8 +96,8 @@ class SequentialTwoSampleTestBase(TwoSampleTestBase):
         Args:
             sequence_0: Sequence of data from the first source.
             sequence_1: Sequence of data from the second source.
-            args: Additional positional arguments.
-            **kwargs: Additional optional or keyward arguments.
+            *args: Additional positional arguments (if any).
+            **kwargs: Additional optional or keyward arguments (if any).
 
         Returns:
             TestResult: Result of the hypothesis test.
@@ -126,8 +133,8 @@ class SequentialTwoSampleTestBase(TwoSampleTestBase):
         Args:
             datum_0: Datum from the first source.
             datum_1: Datum from the second source.
-            args: Additional positional arguments.
-            **kwargs: Additional optional or keyward arguments.
+            *args: Additional positional arguments (if any).
+            **kwargs: Additional optional or keyward arguments (if any).
 
         Returns:
             TestResult: Result of the hypothesis test.
@@ -136,3 +143,109 @@ class SequentialTwoSampleTestBase(TwoSampleTestBase):
 
 
 SequentialTestBase = SequentialTwoSampleTestBase
+
+
+class MirroredTestMixin:
+    """A mixin class to define mirrored hypothesis tests.
+
+    In our terminology, a mirrored test is one that runs two one-sided tests
+    simultaneously, with the null and the alternaive flipped from each other. This is so
+    that it can yield either Decision.AcceptNull or Decision.AcceptAlternative depending
+    on the input data, unlike standard one-sided tests that can never 'accept' the null.
+    (Those standard tests will at most fail to reject the null, as represented by
+    Decision.FailToDecide.)
+
+    For example, if the alternative is Hypothesis.P0MoreThanP1 and the decision is
+    Decision.AcceptNull, it should be interpreted as accepting Hypothesis.P0LessThanP1.
+
+    The significance level alpha controls the following two errors simultaneously: (1)
+    probability of wrongly accepting the alternative when the null is true, and (2)
+    probability of wrongly accepting the null when the alternative is true. Note that
+    Bonferroni correction is not needed since the null hypothesis for one test is the
+    alternative for the other.
+
+    Attributes:
+        It has the same attributes as the underlying base tests.
+    """
+
+    _base_class: Type[Union[TestBase, SequentialTestBase]] = (
+        None  # To be set by subclasses.
+    )
+
+    def __init__(self, alternative: Hypothesis, *args, **kwargs) -> None:
+        """Initializes the MirroredTestMixin object.
+
+        It instantiates two private member variables, _test_for_alternative and
+        _test_for_null, with flipped alternative hypotheses.
+
+        Args:
+            alternative: Specification of the alternative hypothesis.
+            *args: Additional positional arguments (if any).
+            **kwargs: Additional optional or keyward arguments (if any).
+
+        Raises:
+            AttributeError: If alternative is not a valid Hypothesis for a mirrored test.
+        """
+        if alternative == Hypothesis.P0MoreThanP1:
+            null = Hypothesis.P0LessThanP1
+        elif alternative == Hypothesis.P0LessThanP1:
+            null = Hypothesis.P0MoreThanP1
+        else:
+            raise (
+                AttributeError(f"{alternative} is not a valid value for alternative.")
+            )
+
+        self._test_for_alternative = self._base_class(alternative, *args, **kwargs)
+        self._test_for_null = self._base_class(null, *args, **kwargs)
+
+    def __getattr__(self, name: str) -> Any:
+        """Dynamically forward attributes from the underlying base tests.
+
+        Args:
+            name: Name of the attribute.
+
+        Raises:
+            AttributeError: If the attribute does not exist in the base test class.
+        """
+        # Dynamically forward attributes from the base test.
+        if hasattr(self._test_for_alternative, name):
+            return getattr(self._test_for_alternative, name)
+        else:
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no attribute '{name}'"
+            )
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Dynamically set attributes to the underlying base tests.
+
+        Args:
+            name: Name of the attribute.
+            value: Value of the attribute.
+
+        Raises:
+            AttributeError: If the attribute assignment to the base tests fails.
+        """
+        if name == "alternative":
+            # For alternative, make sure _test_for_alternative and _test_for_null has
+            # flipped alternative hypothesis.
+            if value == Hypothesis.P0MoreThanP1:
+                null = Hypothesis.P0LessThanP1
+            elif value == Hypothesis.P0LessThanP1:
+                null = Hypothesis.P0MoreThanP1
+            else:
+                raise (AttributeError(f"{value} is not a valid value for alternative."))
+            self._test_for_alternative.alternative = value
+            self._test_for_null.alternative = null
+        else:
+            # If setting attributes after initialization, set on both
+            # _test_for_alternative and _test_for_null.
+            if name not in ["_test_for_alternative", "_test_for_null", "_base_class"]:
+                if hasattr(self._test_for_alternative, name):
+                    setattr(self._test_for_alternative, name, value)
+                    setattr(self._test_for_null, name, value)
+                else:
+                    raise AttributeError(
+                        f"'{self.__class__.__name__}' object has no attribute '{name}'"
+                    )
+            else:
+                super().__setattr__(name, value)
