@@ -109,7 +109,7 @@ class SequentialTwoSampleTestBase(TwoSampleTestBase):
         if not (len(sequence_0) == len(sequence_1)):
             raise (ValueError("The two input sequences must have the same size."))
 
-        result = None
+        result = TestResult(decision=Decision.FailToDecide)
         for idx in range(len(sequence_0)):
             result = self.step(sequence_0[idx], sequence_1[idx], *args, **kwargs)
             if not result.decision == Decision.FailToDecide:
