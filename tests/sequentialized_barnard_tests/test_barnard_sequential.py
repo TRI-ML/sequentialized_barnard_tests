@@ -1,4 +1,6 @@
 """Unit tests for the Barnard sequential (rectified) method.
+
+TODO: Add additional tests to verify unusual specification of the times of evaluation, etc
 """
 
 import numpy as np
@@ -62,26 +64,6 @@ def test_barnard_sequential(barnard_sequential, sequence_0, sequence_1, expected
 
 
 ##### Mirrored Barnard Sequential Test #####
-
-
-# def test_mirrored_savi_attribute_assignment():
-#     test = MirroredBarnardSequentialTest(alternative=Hypothesis.P0MoreThanP1, alpha=0.05)
-#     assert test.alpha == 0.05
-#     assert test._test_for_alternative.alpha == test.alpha
-#     assert test._test_for_null.alpha == test.alpha
-#     assert test.alternative == Hypothesis.P0MoreThanP1
-#     assert test._test_for_alternative.alternative == test.alternative
-#     assert test._test_for_null.alternative == Hypothesis.P0LessThanP1
-
-#     new_alpha = 0.2
-#     test.alpha = new_alpha
-#     assert test._test_for_alternative.alpha == new_alpha
-#     assert test._test_for_null.alpha == new_alpha
-
-#     new_alternative = Hypothesis.P0LessThanP1
-#     test.alternative = new_alternative
-#     assert test._test_for_alternative.alternative == test.alternative
-#     assert test._test_for_null.alternative == Hypothesis.P0MoreThanP1
 
 
 @pytest.fixture(scope="module")

@@ -25,10 +25,12 @@ from sequentialized_barnard_tests.batch import (
 
 
 class BarnardSequentialTest(SequentialTestBase):
-    """_summary_
+    """Naive sequential rectification of Barnard's Exact Test. This method
+    utilizes (weighted) Bonferroni error correction across the discrete times
+    chosen for batch evaluation. At each time of evaluation, a batch Barnard's
+    Exact Test is run at level alpha_prime, such that the sum of all alpha_prime
+    for all evaluation times is equal to alpha, the overall FPR limit of the test.
 
-    Args:
-        SequentialTestBase (_type_): _description_
     """
 
     def __init__(
@@ -36,20 +38,26 @@ class BarnardSequentialTest(SequentialTestBase):
         alternative: Hypothesis,
         alpha: float,
         n_max: int,
-        times_of_evaluation: ArrayLike,
+        times_of_evaluation: Union[ArrayLike, int],
         weights_of_evaluation: Optional[ArrayLike] = None,
     ) -> None:
-        """_summary_
+        """Initialize the BarnardSequentialTest object.
 
         Args:
-            alternative (Hypothesis): _description_
-            alpha (float): _description_
-            n_max (int): _description_
-            times_of_evaluation (ArrayLike): _description_
-            weights_of_evaluation (Optional[ArrayLike], optional): _description_. Defaults to None.
+            alternative (Hypothesis): Alternative hypothesis for the test.
+            alpha (float): Significance level of the test. Lies in (0., 1.)
+            n_max (int): Maximum number of trials of the test. Integer, must be > 0.
+            times_of_evaluation (ArrayLike, int): Set of times at which to run batch evaluation (ArrayLike), or
+                                                regular interval at which evaluation is to be done (int). Must be
+                                                positive.
+            weights_of_evaluation (Optional[ArrayLike]): Weights (fraction of risk budget) to spend at each evaluation.
+                                                If None, defaults to uniform: alpha_prime = alpha / n_evaluations. Defaults to None.
 
         Raises:
-            ValueError: If alpha, n_max, times_of_evaluation are invalid
+            ValueError: If alpha, n_max are invalid
+            ValueError: If times_of_evaluation is anywhere non-positive
+            Warning: If weights_of_evaluation is broadcastable to times_of_evaluation in an INEXACT manner
+
         """
         # Handle inputs and check for errors in test attributes
         try:
@@ -80,6 +88,8 @@ class BarnardSequentialTest(SequentialTestBase):
         # Handle additional error cases and assign times_of_evaluation and n_evaluations
         if evaluation_times_is_array:
             times_of_evaluation = np.sort(times_of_evaluation)
+
+            # TODO: Add in floor + redundancy handling (remove multiple instances of the same time)
             try:
                 assert np.min(times_of_evaluation) >= 1
                 assert np.min(np.diff(times_of_evaluation)) >= 1
@@ -150,15 +160,20 @@ class BarnardSequentialTest(SequentialTestBase):
         datum_1: Union[bool, int, float],
         verbose: Optional[bool] = False,
     ) -> TestResult:
-        """_summary_
+        """Step through a one-sided Sequentialized Barnard Exact test. Procedure
+        aggregates new data to stored self.sequence, iterates the time variable self.time,
+        and then does one of two things:
+        (1) If NOT a time_of_evaluation, return decision = Decision.FailToDecide
+        (2) If a time_of_evaluation, run the associated evaluation via running
+        a batch test at level alpha_prime = alpha * weight_of_evaluation[idx].
 
         Args:
-            datum_0 (_type_): _description_
-            datum_1 (_type_): _description_
-            verbose (Optional[bool], optional): _description_. Defaults to False.
+            datum_0 (Union[bool, int, float]): New datum from sequence 0
+            datum_1 (Union[bool, int, float]): New datum from sequence 1
+            verbose (Optional[bool], optional): If true, print to stdout. Defaults to False.
 
         Returns:
-            TestResult: _description_
+            TestResult: Result of the test at time self.time.
         """
         is_bernoulli_0 = datum_0 in [0, 1]
         is_bernoulli_1 = datum_1 in [0, 1]
@@ -208,17 +223,19 @@ class BarnardSequentialTest(SequentialTestBase):
             return result
 
     def reset(self, verbose: Optional[bool] = False) -> None:
-        """_summary_
+        """Resets the state variables in order to allow for evaluating
+        a new trajectory.
 
         Args:
-            verbose (Optional[bool], optional): _description_. Defaults to False.
+            verbose (Optional[bool], optional): If True, print to stdout. Defaults to False.
         """
+        # Reset state variables
         self.t = int(0)
         self.sequence = np.zeros((self.n_max, 2))
 
 
 class MirroredBarnardSequentialTest(MirroredTestMixin, SequentialTestBase):
-    """A pair of one-sided Barnard's exact tests with mirrored alternatives.
+    """A pair of one-sided, sequential Barnard's exact tests with mirrored alternatives.
 
     In our terminology, a mirrored test is one that runs two one-sided tests
     simultaneously, with the null and the alternaive flipped from each other. This is so
@@ -272,13 +289,6 @@ class MirroredBarnardSequentialTest(MirroredTestMixin, SequentialTestBase):
                 sequence_0[idx], sequence_1[idx]
             )
 
-            # result_for_alternative = self._test_for_alternative.step(
-            #     sequence_0[idx], sequence_1[idx], *args, **kwargs
-            # )
-            # result_for_null = self._test_for_null.step(
-            #     sequence_0[idx], sequence_1[idx], *args, **kwargs
-            # )
-
             # Store the info (constituent test results)
             info = {
                 "result_for_alternative": result_for_alternative,
@@ -308,17 +318,21 @@ class MirroredBarnardSequentialTest(MirroredTestMixin, SequentialTestBase):
         return result
 
     def step(
-        self, datum_0, datum_1, verbose: Optional[bool] = False
+        self,
+        datum_0: Union[bool, int, float],
+        datum_1: Union[bool, int, float],
+        verbose: Optional[bool] = False,
     ) -> Tuple[TestResult, TestResult]:
-        """_summary_
+        """Step through the mirrored test, which amounts to stepping through
+        each constituent test.
 
         Args:
-            datum_0 (_type_): _description_
-            datum_1 (_type_): _description_
-            verbose (Optional[bool], optional): _description_. Defaults to False.
+            datum_0 (Union[bool, int, float]): new datum from sequence 0
+            datum_1 (Union[bool, int, float]): new datum from sequence 1
+            verbose (Optional[bool], optional): If True, print to stdout. Defaults to False.
 
         Returns:
-            Tuple[TestResult, TestResult]: _description_
+            Tuple[TestResult, TestResult]: Pair of constituent TestResult objects
         """
         result_for_alternative = self._test_for_alternative.step(
             datum_0, datum_1, verbose
