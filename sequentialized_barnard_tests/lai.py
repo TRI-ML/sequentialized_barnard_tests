@@ -15,6 +15,7 @@ from scipy import stats
 from sequentialized_barnard_tests.base import (
     Decision,
     Hypothesis,
+    MirroredTestMixin,
     SequentialTestBase,
     TestResult,
 )
@@ -44,9 +45,9 @@ class LaiTest(SequentialTestBase):
 
     def __init__(
         self,
+        alternative: Hypothesis,
         n_max: int,
         alpha: float,
-        alternative: Hypothesis,
         minimum_gap: Optional[float] = 0.0,
         verbose: Optional[bool] = False,
     ) -> None:
@@ -77,6 +78,7 @@ class LaiTest(SequentialTestBase):
         self.alpha = alpha
         self.alternative = alternative
         self.minimum_gap = minimum_gap
+        self.mirrored = False
 
         # Assign derived attributes
         self.calibration_correction = np.minimum(alpha / 50.0, 1e-3)
@@ -169,7 +171,7 @@ class LaiTest(SequentialTestBase):
             if eval_result > 0.5:
                 # Reject Null and Accept Alternative
                 decision = Decision.AcceptAlternative
-            elif eval_result < -0.5:
+            elif self.mirrored and eval_result < -0.5:
                 decision = Decision.AcceptNull
             else:
                 decision = Decision.FailToDecide
@@ -280,3 +282,30 @@ class LaiTest(SequentialTestBase):
 
         # Store in self.c and update self.gamma
         self.set_c(c)
+
+
+class MirroredLaiTest(LaiTest):
+    def __init__(
+        self,
+        alternative: Hypothesis,
+        n_max: int,
+        alpha: float,
+        minimum_gap: Optional[float] = 0.0,
+        verbose: Optional[bool] = False,
+    ) -> None:
+        """Initializes the Mirrored Lai Test object, which is just the regular LaiTest with
+           self.mirrored = True.
+
+        Args:
+            n_max (int): Maximal trajectory length. Must be greater than 0.
+            alpha (float): Significance level of the test. Must lie in (0., 1.)
+            alternative (Hypothesis): Specification of the alternative hypothesis.
+            minimum_gap (Optional[float], optional): Minimal gap in the alternative space. Nonnegative. Defaults to 0.0 (robust solution).
+            verbose (Optional[bool], optional): If True, print the outputs to stdout. Defaults to False.
+
+        Raise:
+            ValueError: If the inputs are invalid.
+        """
+
+        super().__init__(alternative, n_max, alpha, minimum_gap, verbose)
+        self.mirrored = True
