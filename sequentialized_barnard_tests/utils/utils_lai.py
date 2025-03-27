@@ -163,7 +163,7 @@ def run_test_step_gamma_uniparameter(
         gamma (float, optional): Known or assumed gap in the hypothesis class. Defaults to 0.0.
 
     Returns:
-        decision: Decision at current step: {-1: Reject Null, 0: Continue, 1: Accept Null}
+        decision: Decision at current step: {1: Reject Null, 0: Continue, -1: Accept Null}
     """
     test_val = 0
     if bernoulli_kl(bound, sample_mean) >= (
