@@ -4,7 +4,8 @@ This module defines utility functions that are used solely by Lai procedures.
 """
 
 import numpy as np
-from utils_general import bernoulli_KL
+
+from sequentialized_barnard_tests.utils.utils_general import bernoulli_KL
 
 # Reference papers:
 # Lai (1988): Nearly optimal sequential tests of composite hypotheses
@@ -110,7 +111,7 @@ def compute_hgamma_star_multiplier(c: float, n: int, gamma: float = 0.0) -> floa
         return np.exp(-gamma * gamma * ((c * n) ** 1.125) / 2.0)
 
 
-def compuete_g0_star(c: float, n: int) -> float:
+def compute_g0_star(c: float, n: int) -> float:
     """Implements definition given above Eqn 4.2 in Lai (1988) -- Nearly Optimal Sequential Tests of Composite Hypotheses
 
     Args:
@@ -159,9 +160,9 @@ def run_test_step_gamma_uniparameter(
     if bernoulli_KL(bound, sample_mean) >= (
         compute_ggamma_star(c, n, gamma) / float(n)
     ):
-        if sample_mean > bound:  # Alt
+        if sample_mean > bound:  # Reject Null; Accept Alternative
+            test_val = 1
+        else:  # Accept Null and stop early
             test_val = -1
-        else:
-            test_val = 1  # Null
 
     return test_val
