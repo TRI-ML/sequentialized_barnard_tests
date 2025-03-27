@@ -5,7 +5,7 @@ This module defines utility functions that are used solely by Lai procedures.
 
 import numpy as np
 
-from sequentialized_barnard_tests.utils.utils_general import bernoulli_KL
+from sequentialized_barnard_tests.utils.utils_general import bernoulli_kl
 
 # Reference papers:
 # Lai (1988): Nearly optimal sequential tests of composite hypotheses
@@ -19,6 +19,9 @@ def calculate_exact_zeta(abs_gap_size: float, p0: float) -> float:
     Args:
         abs_gap_size (float): Magnitude of true (data-generating) gap between p0 and p1. Lies in [0, 1]
         p0 (float): True (data-generating) baseline success rate. Lies in [0, 1]
+
+    Raises:
+        AssertionError: If abs_gap_size is not in [0, 1 - p0]
 
     Returns:
         zeta: Value of zeta offset in the univariate test. Lies in [0, 0.5]
@@ -34,6 +37,9 @@ def calculate_robust_zeta(abs_gap_size: float) -> float:
 
     Args:
         abs_gap_size (float): Magnitude of true (data-generating) gap between p0 and p1. Lies in [0, 1]
+
+    Raises:
+        AssertionError: If abs_gap_size is not in [0, 1].
 
     Returns:
         zeta: Value of zeta offset in the univariate test. Lies in [0, 0.5]
@@ -51,6 +57,9 @@ def calculate_gamma(theta0: float, theta1: float, c: float) -> float:
         theta0 (float): Null (scalar) parameter
         theta1 (float): Alt (scalar) parameter
         c (float): Regularizer in the optimization problem (real, > 0)
+
+    Raises:
+        AssertionError: If c <= 0.
 
     Returns:
         gamma: Nondimensionalized quantity representing gap in test hypotheses
@@ -157,7 +166,7 @@ def run_test_step_gamma_uniparameter(
         decision: Decision at current step: {-1: Reject Null, 0: Continue, 1: Accept Null}
     """
     test_val = 0
-    if bernoulli_KL(bound, sample_mean) >= (
+    if bernoulli_kl(bound, sample_mean) >= (
         compute_ggamma_star(c, n, gamma) / float(n)
     ):
         if sample_mean > bound:  # Reject Null; Accept Alternative

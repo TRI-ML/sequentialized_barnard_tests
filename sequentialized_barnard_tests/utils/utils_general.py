@@ -3,10 +3,12 @@
 This module defines utility functions that are shared across sequential methods.
 """
 
+import warnings
+
 import numpy as np
 
 
-def bernoulli_KL(p0: float, p1: float) -> float:
+def bernoulli_kl(p0: float, p1: float) -> float:
     """Compute KL divergence between Bernoulli distributions. Form is
        KL(p1 || p0). Utilizes continuity solution at p1 = 0 and p1=1
 
@@ -72,7 +74,7 @@ def compute_middle_p(p0: float, p1: float) -> float:
     while np.abs(diff_p) > 1e-6:
         p_mid = 0.5 * (p_low + p_high)
 
-        KL_DIFF = bernoulli_KL(p0, p_mid) - bernoulli_KL(p1, p_mid)
+        KL_DIFF = bernoulli_kl(p0, p_mid) - bernoulli_kl(p1, p_mid)
 
         if np.abs(KL_DIFF) < 1e-8:
             return p_mid
@@ -105,8 +107,8 @@ def compute_natural_middle_p(p0: float, p1: float) -> float:
                in [0, 1]
     """
     if p1 <= p0:
-        print(
-            "Warning: p0 >= p1. Returning interpolant, but check the ordering of inputs."
+        warnings.warn(
+            "Currently, p0 >= p1. Returning interpolant, but check the ordering of inputs."
         )
 
     try:
