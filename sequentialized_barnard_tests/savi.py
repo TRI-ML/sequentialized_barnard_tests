@@ -6,7 +6,7 @@ and Beyond' by R. J. Turner and P. D. Grünwald (Statistics & Probability Letter
 2023).
 """
 
-from typing import Optional, Union
+from typing import Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -40,7 +40,7 @@ class SaviTest(SequentialTestBase):
         self,
         alternative: Hypothesis,
         alpha: float,
-        verbose: Optional[bool] = False,
+        verbose: bool = False,
     ) -> None:
         """Initializes the test object.
 
@@ -83,7 +83,7 @@ class SaviTest(SequentialTestBase):
         self,
         datum_0: Union[bool, int, float],
         datum_1: Union[bool, int, float],
-        verbose: Optional[bool] = False,
+        verbose: bool = False,
     ) -> TestResult:
         """Runs the test of a single pair of Bernoulli data.
 
@@ -165,7 +165,7 @@ class SaviTest(SequentialTestBase):
 
         return result
 
-    def reset(self, verbose: Optional[bool] = False) -> None:
+    def reset(self, verbose: bool = False) -> None:
         """Resets the underlying SAVI process.
 
         Args:
@@ -224,7 +224,7 @@ class OracleSaviTest(SaviTest):
         alternative: Hypothesis,
         alpha: float,
         true_parameters: ArrayLike,
-        verbose: Optional[bool] = False,
+        verbose: bool = False,
     ) -> None:
         """Initializes the test object.
 
@@ -297,7 +297,7 @@ class MirroredSaviTest(MirroredTestMixin, SequentialTestBase):
         self,
         datum_0: Union[bool, int, float],
         datum_1: Union[bool, int, float],
-        verbose: Optional[bool] = False,
+        verbose: bool = False,
     ) -> TestResult:
         """Runs the test of a single pair of Bernoulli data.
 
@@ -338,7 +338,7 @@ class MirroredSaviTest(MirroredTestMixin, SequentialTestBase):
 
         return result
 
-    def reset(self, verbose: Optional[bool] = False) -> None:
+    def reset(self, verbose: bool = False) -> None:
         """Resets the underlying SAVI process.
 
         Args:
