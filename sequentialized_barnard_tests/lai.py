@@ -7,10 +7,14 @@ DOI: 10.1214/aos/1176350840
 URL: https://projecteuclid.org/journals/annals-of-statistics/volume-16/issue-2/Nearly-Optimal-Sequential-Tests-of-Composite-Hypotheses/10.1214/aos/1176350840.full
 """
 
+import concurrent.futures
+import os
 import warnings
+from functools import partial
 from typing import Union
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy import stats
 from tqdm import tqdm
 
@@ -287,17 +291,23 @@ class LaiTest(SequentialTestBase):
             np.abs(fpr_error) >= 1.5
             and np.abs(log_c_max - log_c_min) > minimum_log_c_error
         ):
-            erroneous_decisions = int(0)
             # Update estimate of c
             log_c_mid = 0.5 * (log_c_max + log_c_min)
             c = np.exp(log_c_mid)
             self.set_c(c, verbose=False)
-
-            for k in range(n_calibration_sequences):
-                # Step through each and figure out FPR
-                result = self.run_on_sequence(sequences[k, :, 0], sequences[k, :, 1])
-                if result.decision == Decision.AcceptAlternative:
-                    erroneous_decisions += 1
+            n_workers = max(os.cpu_count() - 2, 1)
+            # Use ProcessPoolExecutor to parallelize the inner loop
+            with concurrent.futures.ProcessPoolExecutor(
+                max_workers=n_workers
+            ) as executor:
+                # Bind self to the helper function using partial
+                func = partial(worker_run_test_for_calibration, self)
+                # Prepare the list of sequences to process
+                seq_list = [sequences[k, :, :] for k in range(n_calibration_sequences)]
+                # Map the helper function over all calibration sequences
+                count_list = list(executor.map(func, seq_list))
+            # Sum the results to count the erroneous decisions.
+            erroneous_decisions = sum(count_list)
 
             fpr_error = erroneous_decisions - target_error_count
 
@@ -483,3 +493,20 @@ class MirroredLaiTest(LaiTest):
             result = TestResult(self._current_decision, info)
 
             return result
+
+
+# Define this helper function at the module level so it's picklable.
+def worker_run_test_for_calibration(instance: LaiTest, paired_sequence: ArrayLike):
+    """The worker function for calibrtion of the regularizer `c`.
+
+    Args:
+        instance: A test object.
+        sequence: A paired Bernoulli sequence of shape (n_max, 2).
+
+    Returns:
+        1 if AcceptAlternative, 0 if otherwise.
+    """
+    # seq is a 2D numpy array of shape (n_max, 2)
+    result = instance.run_on_sequence(paired_sequence[:, 0], paired_sequence[:, 1])
+    # Return 1 if the decision is AcceptAlternative, else 0.
+    return 1 if result.decision == Decision.AcceptAlternative else 0
