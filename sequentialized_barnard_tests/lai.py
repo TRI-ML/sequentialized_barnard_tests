@@ -92,6 +92,11 @@ class LaiTest(SequentialTestBase):
         # Assign derived attributes
         self.calibration_correction = np.minimum(alpha / 50.0, 1e-3)
 
+        # Initialize Lai uniparameter test attributes
+        self.zeta = calculate_robust_zeta(minimum_gap)
+        self.theta_0 = 0.5
+        self.theta_1 = 0.5 + self.zeta
+
         # Initialize Lai procedure optimization regularizers
         self.c = None
         self.gamma = None  # Note that self.gamma is updated automatically whenever self.c is updated.
@@ -105,11 +110,6 @@ class LaiTest(SequentialTestBase):
         else:
             # Calibrated to alpha = 0.05, n_max = 500, minimum_gap = 0.0
             self.set_c(default_c)
-
-        # Initialize Lai uniparameter test attributes
-        self.zeta = calculate_robust_zeta(minimum_gap)
-        self.theta_0 = 0.5
-        self.theta_1 = 0.5 + self.zeta
 
         # Run the reset method by default
         self.reset(verbose)
