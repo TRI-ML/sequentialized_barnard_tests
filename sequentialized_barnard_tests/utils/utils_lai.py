@@ -21,12 +21,14 @@ def calculate_exact_zeta(abs_gap_size: float, p0: float) -> float:
         p0 (float): True (data-generating) baseline success rate. Lies in [0, 1]
 
     Raises:
-        AssertionError: If abs_gap_size is not in [0, 1 - p0]
+        ValueError: If abs_gap_size is not in [0, 1 - p0]
 
     Returns:
         zeta: Value of zeta offset in the univariate test. Lies in [0, 0.5]
     """
-    assert abs_gap_size >= 0.0 and abs_gap_size <= 1.0 - p0
+    if not (abs_gap_size >= 0.0 and abs_gap_size <= 1.0 - p0):
+        raise ValueError("abs_gap_size is not in [0, 1 - p0]")
+
     return abs_gap_size / (
         2.0 * abs_gap_size + 4.0 * p0 - 4.0 * p0 * p0 - 4.0 * abs_gap_size * p0
     )
@@ -39,12 +41,13 @@ def calculate_robust_zeta(abs_gap_size: float) -> float:
         abs_gap_size (float): Magnitude of true (data-generating) gap between p0 and p1. Lies in [0, 1]
 
     Raises:
-        AssertionError: If abs_gap_size is not in [0, 1].
+        ValueError: If abs_gap_size is not in [0, 1].
 
     Returns:
         zeta: Value of zeta offset in the univariate test. Lies in [0, 0.5]
     """
-    assert abs_gap_size >= 0.0 and abs_gap_size <= 1.0
+    if not (abs_gap_size >= 0.0 and abs_gap_size <= 1.0):
+        raise ValueError("abs_gap_size is not in [0, 1]")
     return abs_gap_size / (
         2.0 * abs_gap_size + (1.0 - abs_gap_size) * (1.0 - abs_gap_size)
     )
@@ -59,12 +62,14 @@ def calculate_gamma(theta0: float, theta1: float, c: float) -> float:
         c (float): Regularizer in the optimization problem (real, > 0)
 
     Raises:
-        AssertionError: If c <= 0.
+        ValueError: If c <= 0.
 
     Returns:
         gamma: Nondimensionalized quantity representing gap in test hypotheses
     """
-    assert c > 0
+    if not c > 0:
+        raise ValueError("Regularizer c must be positive")
+
     return abs(theta1 - theta0) / (2.0 * np.sqrt(c))
 
 

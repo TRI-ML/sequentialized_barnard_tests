@@ -7,15 +7,16 @@ DOI: 10.1214/aos/1176350840
 URL: https://projecteuclid.org/journals/annals-of-statistics/volume-16/issue-2/Nearly-Optimal-Sequential-Tests-of-Composite-Hypotheses/10.1214/aos/1176350840.full
 """
 
+import warnings
 from typing import Optional, Union
 
 import numpy as np
 from scipy import stats
+from tqdm import tqdm
 
 from sequentialized_barnard_tests.base import (
     Decision,
     Hypothesis,
-    MirroredTestMixin,
     SequentialTestBase,
     TestResult,
 )
@@ -38,7 +39,7 @@ class LaiTest(SequentialTestBase):
         alpha (float): Significance level of the test, lies in (0., 1.).
         calibration_correction (float): Significance level of calibration, lies in (0., alpha).
         minimum_gap (float): Minimal allowed gap, >= 0. Defaults to 0.
-        n_max (int): Maximal allowed length of the test trajectory. Must be greater than 0.
+        n_max (int): Maximal allowed length of the test sequence. Must be greater than 0.
         c (float): Regularized cost calibrated to (n_max, alpha). Must lie in (0., 1.)
 
     """
@@ -49,15 +50,23 @@ class LaiTest(SequentialTestBase):
         n_max: int,
         alpha: float,
         minimum_gap: Optional[float] = 0.0,
+        calibrate_regularizer: Optional[bool] = False,
+        default_c: Optional[float] = 4.3321e-05,
+        default_calibration_trajectories: Optional[int] = 10000,
+        default_calibration_seed: Optional[int] = 42,
         verbose: Optional[bool] = False,
     ) -> None:
         """Initializes the test object.
 
         Args:
-            n_max (int): Maximal trajectory length. Must be greater than 0.
+            n_max (int): Maximal sequence length. Must be greater than 0.
             alpha (float): Significance level of the test. Must lie in (0., 1.)
             alternative (Hypothesis): Specification of the alternative hypothesis.
             minimum_gap (Optional[float], optional): Minimal gap in the alternative space. Nonnegative. Defaults to 0.0 (robust solution).
+            calibrate_regularizer (Optional[bool]): Toggle whether to calibrate the value of c or set a default value of default_c. Defaults to False.
+            default_c (Optional[float]): If calibrate_regularizer is False, self.c is set to default_c. Defaults to 4.3321e-05, which is tuned for n_max = 500, alpha = 0.05, and minimum_gap = 0.0.
+            default_calibration_trajectories (Optional[int]): If calibrate_regularizer is True, self.c is tuned via calibration, where the number of sequences equals default_calibration_trajectories. Defaults to 10000.
+            default_calibration_seed (Optional[int]): If calibrating the Lai procedure, use this seed in order to generate the sequences. Defaults to 42.
             verbose (Optional[bool], optional): If True, print the outputs to stdout. Defaults to False.
 
         Raise:
@@ -85,7 +94,17 @@ class LaiTest(SequentialTestBase):
 
         # Initialize Lai procedure optimization regularizers
         self.c = None
-        self.gamma = None
+        self.gamma = None  # Note that self.gamma is updated automatically whenever self.c is updated.
+
+        # Assign values to these regularizers either via calibration or by explicitly setting c.
+        if calibrate_regularizer:
+            self.calibrate_c(
+                n_calibration_trajectories=default_calibration_trajectories,
+                seed=default_calibration_seed,
+            )
+        else:
+            # Calibrated to alpha = 0.05, n_max = 500, minimum_gap = 0.0
+            self.set_c(default_c)
 
         # Initialize Lai uniparameter test attributes
         self.zeta = calculate_robust_zeta(minimum_gap)
@@ -128,7 +147,9 @@ class LaiTest(SequentialTestBase):
         # Iterate time (total number of pairs seen)
         self.t += 1
         if self.t > self.n_max:
-            print("Have exceeded the allowed number of evals; returning FailToDecide")
+            warnings.warn(
+                "Have exceeded the allowed number of evals; returning FailToDecide"
+            )
             decision = Decision.FailToDecide
             info = {"Time": self.t, "State": self.state}
             result = TestResult(decision, info)
@@ -212,19 +233,23 @@ class LaiTest(SequentialTestBase):
         try:
             assert new_c > 0.0 and new_c < 1.0
         except:
-            raise ValueError("Invalid value of c")
+            raise ValueError("Regularizer c must be in (0., 1.)")
 
         self.c = new_c
         self.gamma = calculate_gamma(self.theta_0, self.theta_1, self.c)
 
-    def calibrate_c(self, n_calibration_trajectories: Optional[int] = 10000) -> None:
+    def calibrate_c(
+        self,
+        n_calibration_trajectories: Optional[int] = 10000,
+        seed: Optional[int] = 42,
+    ) -> None:
         """Set the optimization regularizer c in (0., 1.) using Monte Carlo estimation and a
         high-probability upper bound. Doing so updates the derived parameter (gamma) in the
         optimization schema.
 
         Args:
             n_calibration_trajectories (Optional[int], optional): Number of Monte Carlo trajectories. Must be greater than 100. Defaults to 10000.
-
+            seed (Optional[int]): Seed for the numpy random Generator object, from which the calibration trajectories are drawn. This ensures reproducibility. Defaults to 42.
         Raise:
             ValueError: If the number of calibration trajectories does not exceed 100.
         """
@@ -234,8 +259,12 @@ class LaiTest(SequentialTestBase):
             raise ValueError(
                 "Insufficient calibration trajectories. Must have at least 100."
             )
+
+        # Define the Generator object
+        rng = np.random.default_rng(seed=seed)
+
         # Generate calibration trajectories
-        trajectories = np.random.binomial(
+        trajectories = rng.binomial(
             1, 0.5, size=(n_calibration_trajectories, self.n_max, 2)
         )
 
@@ -254,7 +283,17 @@ class LaiTest(SequentialTestBase):
         log_c_min = -16.0
 
         fpr_error = n_calibration_trajectories
-        while np.abs(fpr_error) >= 1.5:
+        # Add termination guarantee via tightness bound on log_c_error
+        minimum_log_c_error = 1e-5
+        maximum_number_of_iterations = int(
+            np.floor(np.log((log_c_max - log_c_min) / minimum_log_c_error) + 1)
+        )
+
+        calibration_progress_bar = tqdm(total=maximum_number_of_iterations)
+        while (
+            np.abs(fpr_error) >= 1.5
+            and np.abs(log_c_max - log_c_min) > minimum_log_c_error
+        ):
             erroneous_decisions = int(0)
             # Update estimate of c
             log_c_mid = 0.5 * (log_c_max + log_c_min)
@@ -280,6 +319,8 @@ class LaiTest(SequentialTestBase):
             else:
                 break
 
+            calibration_progress_bar.update(1)
+
         # Store in self.c and update self.gamma
         self.set_c(c)
 
@@ -297,7 +338,7 @@ class MirroredLaiTest(LaiTest):
            self.mirrored = True.
 
         Args:
-            n_max (int): Maximal trajectory length. Must be greater than 0.
+            n_max (int): Maximal sequence length. Must be greater than 0.
             alpha (float): Significance level of the test. Must lie in (0., 1.)
             alternative (Hypothesis): Specification of the alternative hypothesis.
             minimum_gap (Optional[float], optional): Minimal gap in the alternative space. Nonnegative. Defaults to 0.0 (robust solution).
