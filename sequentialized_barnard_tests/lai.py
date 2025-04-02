@@ -112,10 +112,11 @@ class LaiTest(SequentialTestBase):
             self.calibrate_c(
                 n_calibration_sequences=n_calibration_sequences,
                 seed=calibration_seed,
+                verbose=verbose,
             )
         else:
             # Calibrated to alpha = 0.05, n_max = 500, minimum_gap = 0.0
-            self.set_c(default_c)
+            self.set_c(default_c, verbose)
 
         # Run the reset method by default
         self._state = None
@@ -209,18 +210,20 @@ class LaiTest(SequentialTestBase):
                 print("    Null:        P0 >= P1")
                 print("    Alternative: P0 <  P1")
 
-    def set_c(self, new_c: float) -> None:
+    def set_c(self, new_c: float, verbose: bool = False) -> None:
         """Set the optimization regularizer c in (0., 1.) to a user-specified value.
         Doing so updates the derived parameter (gamma) in the optimization schema.
 
         Args:
             new_c (float): Optimization regularizer. Lies in (0., 1.)
+            verbose (optional): If True, print the outputs to stdout. Defaults to False.
         """
         try:
             assert new_c > 0.0 and new_c < 1.0
         except:
             raise ValueError("Regularizer c must be in (0., 1.)")
-
+        if verbose:
+            print(f"Setting the regularizer term to {new_c}.")
         self.c = new_c
         self._gamma = calculate_gamma(self._theta_0, self._theta_1, self.c)
 
@@ -228,6 +231,7 @@ class LaiTest(SequentialTestBase):
         self,
         n_calibration_sequences: int = 10000,
         seed: int = 42,
+        verbose: bool = False,
     ) -> None:
         """Set the optimization regularizer c in (0., 1.) using Monte Carlo estimation
         and a high-probability upper bound. Doing so updates the derived parameter
@@ -239,6 +243,7 @@ class LaiTest(SequentialTestBase):
             seed (int, optional): Seed for the numpy random Generator object, from which
                 the calibration sequences are drawn. This ensures reproducibility.
                 Defaults to 42.
+            verbose (optional): If True, print the outputs to stdout. Defaults to False.
         Raise:
             ValueError: If the number of calibration sequences does not exceed 100.
         """
@@ -248,7 +253,8 @@ class LaiTest(SequentialTestBase):
             raise ValueError(
                 "Insufficient calibration sequences. Must have at least 100."
             )
-
+        if verbose:
+            print("Calibrating the regularizer term using Monte Carlo sampling.")
         # Define the Generator object
         rng = np.random.default_rng(seed=seed)
 
@@ -285,7 +291,7 @@ class LaiTest(SequentialTestBase):
             # Update estimate of c
             log_c_mid = 0.5 * (log_c_max + log_c_min)
             c = np.exp(log_c_mid)
-            self.set_c(c)
+            self.set_c(c, verbose=False)
 
             for k in range(n_calibration_sequences):
                 # Step through each and figure out FPR
@@ -307,7 +313,7 @@ class LaiTest(SequentialTestBase):
             calibration_progress_bar.update(1)
 
         # Store in self.c and update self.gamma
-        self.set_c(c)
+        self.set_c(c, verbose=False)
 
     def _update_state_and_run_lai(
         self,
