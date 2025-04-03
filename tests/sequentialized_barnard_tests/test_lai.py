@@ -1,5 +1,4 @@
-"""Unit tests for the Lai procedure
-"""
+"""Unit tests for the Lai procedure"""
 
 import numpy as np
 import pytest
@@ -94,3 +93,38 @@ def mirrored_lai(request):
 def test_mirrored_lai(mirrored_lai, sequence_0, sequence_1, expected):
     result = mirrored_lai.run_on_sequence(sequence_0, sequence_1)
     assert result.decision == expected
+
+
+##### Offline Calibration Test #####
+@pytest.mark.parametrize(
+    ("alpha", "n_max"),
+    [
+        # fmt: off
+        (0.004, 250),
+        (0.004, 1500),
+        (0.02, 250),
+        (0.02, 1500),
+        (0.25, 250),
+        (0.25, 1500),
+        (0.62, 250),
+        (0.62, 1500),
+        # fmt: on
+    ],
+)
+def test_offline_calibration(alpha, n_max):
+    test_offline = MirroredLaiTest(
+        alternative=Hypothesis.P0LessThanP1,
+        n_max=n_max,
+        alpha=alpha,
+        calibrate_regularizer=True,
+        use_offline_calibration=True,
+    )
+    test_online = MirroredLaiTest(
+        alternative=Hypothesis.P0LessThanP1,
+        n_max=n_max,
+        alpha=alpha,
+        calibrate_regularizer=True,
+        n_calibration_sequences=1000,
+        use_offline_calibration=False,
+    )
+    assert np.abs(test_offline.c - test_online.c) < 1e-3
