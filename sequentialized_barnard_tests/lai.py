@@ -74,7 +74,7 @@ class LaiTest(SequentialTestBase):
                 n_max = 500, alpha = 0.05, and minimum_gap = 0.0.
             n_calibration_sequences (int, optional): If calibrate_regularizer is True,
                 self.c is tuned via calibration, where the number of sequences equals
-                num_calibration_sequences. Defaults to 10000.
+                n_calibration_sequences. Defaults to 10000.
             calibration_seed (int, optional): If calibrating the Lai procedure,
                 use this seed in order to generate the sequences. Defaults to 42.
             verbose (bool, optional): If True, print the outputs to stdout.
@@ -407,7 +407,7 @@ class MirroredLaiTest(LaiTest):
                 n_max = 500, alpha = 0.05, and minimum_gap = 0.0.
             n_calibration_sequences (int, optional): If calibrate_regularizer is True,
                 self.c is tuned via calibration, where the number of sequences equals
-                num_calibration_sequences. Defaults to 10000.
+                n_calibration_sequences. Defaults to 10000.
             calibration_seed (int, optional): If calibrating the Lai procedure,
                 use this seed in order to generate the sequences. Defaults to 42.
             verbose (bool, optional): If True, print the outputs to stdout.
