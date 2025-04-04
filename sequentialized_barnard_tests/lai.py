@@ -116,7 +116,16 @@ class LaiTest(SequentialTestBase):
 
         # Assign values to these regularizers either via calibration or by explicitly setting c.
         if calibrate_regularizer:
+            # User requested to calibrate.
+            if not np.isclose(default_c, 4.3321e-05):
+                warnings.warn(
+                    (
+                        "User tried to set `default_c` but this will be ignored "
+                        "since `calibrate_regularizer` is True."
+                    )
+                )
             if use_offline_calibration:
+                # User requested to use offline data.
                 try:
                     calibration_path = os.path.join(
                         os.path.dirname(__file__),
@@ -140,13 +149,30 @@ class LaiTest(SequentialTestBase):
                         verbose=verbose,
                     )
             else:
+                # Use requested to perform online calibration.
                 self.calibrate_c(
                     n_calibration_sequences=n_calibration_sequences,
                     seed=calibration_seed,
                     verbose=verbose,
                 )
+        elif use_offline_calibration:
+            # User requested to not calibrate but demanded to use offline data.
+            warnings.warn(
+                (
+                    "User requested to use offline data for calibration but "
+                    "`calibrate_regularizer` is set to False. The request is ignored."
+                )
+            )
+            self.set_c(default_c, verbose)
         else:
-            # Calibrated to alpha = 0.05, n_max = 500, minimum_gap = 0.0
+            # User requested to set c to a specified value.
+            if n_calibration_sequences != 10000:
+                warnings.warn(
+                    (
+                        "User tried to set `n_calibration_sequences` but this will be "
+                        "ignored since `calibrate_regularizer` is False."
+                    )
+                )
             self.set_c(default_c, verbose)
 
         # Run the reset method by default

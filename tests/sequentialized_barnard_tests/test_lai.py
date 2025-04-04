@@ -15,6 +15,8 @@ def lai(request):
         alternative=request.param,
         n_max=500,
         alpha=0.05,
+        calibrate_regularizer=False,
+        use_offline_calibration=False,
     )
     test.set_c(4.3320915613895993e-05)
     return test
@@ -69,6 +71,8 @@ def mirrored_lai(request):
         alternative=request.param,
         n_max=500,
         alpha=0.05,
+        calibrate_regularizer=False,
+        use_offline_calibration=False,
     )
     test.set_c(5.3077895340120925e-05)
     return test
@@ -128,3 +132,6 @@ def test_offline_calibration(alpha, n_max):
         use_offline_calibration=False,
     )
     assert np.abs(test_offline.c - test_online.c) < 1e-3
+    # TODO (Haruki): Absolute error is not a good measure of accuracy.
+    # Perhaps we should run MC simulation using the estimated `c` and compare the
+    # terminal FPR to the requested value of alpha.
