@@ -1,5 +1,4 @@
-"""Unit tests for the Lai procedure
-"""
+"""Unit tests for the Lai procedure"""
 
 import numpy as np
 import pytest
@@ -16,6 +15,8 @@ def lai(request):
         alternative=request.param,
         n_max=500,
         alpha=0.05,
+        calibrate_regularizer=False,
+        use_offline_calibration=False,
     )
     test.set_c(4.3320915613895993e-05)
     return test
@@ -70,6 +71,8 @@ def mirrored_lai(request):
         alternative=request.param,
         n_max=500,
         alpha=0.05,
+        calibrate_regularizer=False,
+        use_offline_calibration=False,
     )
     test.set_c(5.3077895340120925e-05)
     return test
@@ -94,3 +97,41 @@ def mirrored_lai(request):
 def test_mirrored_lai(mirrored_lai, sequence_0, sequence_1, expected):
     result = mirrored_lai.run_on_sequence(sequence_0, sequence_1)
     assert result.decision == expected
+
+
+##### Offline Calibration Test #####
+@pytest.mark.parametrize(
+    ("alpha", "n_max"),
+    [
+        # fmt: off
+        (0.004, 250),
+        (0.004, 1500),
+        (0.02, 250),
+        (0.02, 1500),
+        (0.25, 250),
+        (0.25, 1500),
+        (0.62, 250),
+        (0.62, 1500),
+        # fmt: on
+    ],
+)
+def test_offline_calibration(alpha, n_max):
+    test_offline = MirroredLaiTest(
+        alternative=Hypothesis.P0LessThanP1,
+        n_max=n_max,
+        alpha=alpha,
+        calibrate_regularizer=True,
+        use_offline_calibration=True,
+    )
+    test_online = MirroredLaiTest(
+        alternative=Hypothesis.P0LessThanP1,
+        n_max=n_max,
+        alpha=alpha,
+        calibrate_regularizer=True,
+        n_calibration_sequences=1000,
+        use_offline_calibration=False,
+    )
+    assert np.abs(test_offline.c - test_online.c) < 1e-3
+    # TODO (Haruki): Absolute error is not a good measure of accuracy.
+    # Perhaps we should run MC simulation using the estimated `c` and compare the
+    # terminal FPR to the requested value of alpha.
