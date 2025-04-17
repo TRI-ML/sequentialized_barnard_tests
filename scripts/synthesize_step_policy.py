@@ -384,44 +384,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    # try:
-    #     n_max = int(sys.argv[1])
-    # except:
-    #     n_max = int(200)
-
-    # try:
-    #     alpha = float(sys.argv[2])
-    # except:
-    #     alpha = 0.05
-    # try:
-    #     min_gap = float(sys.argv[3])
-    # except:
-    #     min_gap = float(0.0)
-
-    # try:
-    #     data_dependent_flag = bool(int(sys.argv[4]))
-    # except:
-    #     data_dependent_flag = False
-
-    # try:
-    #     n_points = int(sys.argv[5])
-    # except:
-    #     n_points = int(99)
-
-    # try:
-    #     lambda_value = float(sys.argv[6])
-    # except:
-    #     lambda_value = 2.1
-
-    # try:
-    #     major_axis_length = float(sys.argv[7])
-    # except:
-    #     major_axis_length = 1.4
-
-    # try:
-    #     log_mass_removal_p_norm = np.log(float(sys.argv[8]))
-    # except:
-    #     log_mass_removal_p_norm = 0.0
 
     (
         POLICY_LIST_COMPRESSED,
