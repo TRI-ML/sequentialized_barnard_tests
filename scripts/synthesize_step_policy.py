@@ -3,6 +3,7 @@
 Policies are stored in sequentialized_barnard_tests/policies.
 """
 
+import argparse
 import copy
 import os
 import pickle
@@ -292,65 +293,152 @@ def run_step_policy_synthesis(
 
 
 if __name__ == "__main__":
-    try:
-        n_max = int(sys.argv[1])
-    except:
-        n_max = int(200)
+    parser = argparse.ArgumentParser(
+        description=(
+            "This script synthesizes a near-optimal STEP policy for a given "
+            "{n_max, alpha} combination. The results are saved to a .npy file at "
+            "'sequentialized_barnard_tests/policies'. Some parameters of the STEP "
+            "policy's synthesis procedure can have important numerical effects "
+            "on the resulting efficiency of computation."
+        )
+    )
+    parser.add_argument(
+        "-n",
+        "--n_max",
+        type=int,
+        default=200,
+        help=(
+            "Maximum number of robot policy evals (per policy) in the evaluation procedure. "
+            "Defaults to 200."
+        ),
+    )
+    parser.add_argument(
+        "-a",
+        "--alpha",
+        type=float,
+        default=0.05,
+        help=(
+            "Maximal allowed Type-1 error rate of the statistical testing procedure. "
+            "Defaults to 0.05."
+        ),
+    )
+    parser.add_argument(
+        "-np",
+        "--n_points",
+        type=int,
+        default=89,
+        help=(
+            "Number of control points used to approximate worst-case Type-1 Error. First "
+            "of three numerically important STEP parameters. More n_points adds precision "
+            "at the expense of additional computation. In practice, ~50 is often sufficient. "
+            "Defaults to 89."
+        ),
+    )
+    parser.add_argument(
+        "-l",
+        "--lambda_value",
+        type=float,
+        default=2.1,
+        help=(
+            "First of two approximate shape parameters which specify a prior over the order "
+            "in which states are appended to the optimization scheme. Can be numerically important "
+            "in practice. "
+            "Defaults to 2.1."
+        ),
+    )
+    parser.add_argument(
+        "-m",
+        "--major_axis_length",
+        type=float,
+        default=1.4,
+        help=(
+            "Second of two approximate shape parameters which specify a prior over the order "
+            "in which states are appended to the optimization scheme. Can be numerically important "
+            "in practice. "
+            "Defaults to 1.4."
+        ),
+    )
+    parser.add_argument(
+        "-pz",
+        "--log_p_norm",
+        type=float,
+        default=0.0,
+        help=(
+            "Rate at which risk is accumulated, reflecting user's belief about underlying "
+            "likelihood of different alternatives and nulls being true. If using a p_norm "
+            ", this variable is equivalent to log(p). If not using a p_norm, this is the "
+            "argument to the zeta function, partial sums of which give the shape of the risk budget."
+            "Defaults to 0.0."
+        ),
+    )
+    parser.add_argument(
+        "-up",
+        "--use_p_norm",
+        type=bool,
+        default=False,
+        help=(
+            "Toggle whether to use p_norm or zeta function shape family for the risk budget. "
+            "If True, uses p_norm shape; else, uses zeta function shape family. "
+            "Defaults to False (zeta function partial sum family)."
+        ),
+    )
 
-    try:
-        alpha = float(sys.argv[2])
-    except:
-        alpha = 0.05
-    try:
-        min_gap = float(sys.argv[3])
-    except:
-        min_gap = float(0.0)
+    args = parser.parse_args()
+    # try:
+    #     n_max = int(sys.argv[1])
+    # except:
+    #     n_max = int(200)
 
-    try:
-        data_dependent_flag = bool(int(sys.argv[4]))
-    except:
-        data_dependent_flag = False
+    # try:
+    #     alpha = float(sys.argv[2])
+    # except:
+    #     alpha = 0.05
+    # try:
+    #     min_gap = float(sys.argv[3])
+    # except:
+    #     min_gap = float(0.0)
 
-    try:
-        n_points = int(sys.argv[5])
-    except:
-        n_points = int(99)
+    # try:
+    #     data_dependent_flag = bool(int(sys.argv[4]))
+    # except:
+    #     data_dependent_flag = False
 
-    try:
-        lambda_value = float(sys.argv[6])
-    except:
-        lambda_value = 2.1
+    # try:
+    #     n_points = int(sys.argv[5])
+    # except:
+    #     n_points = int(99)
 
-    try:
-        major_axis_length = float(sys.argv[7])
-    except:
-        major_axis_length = 1.4
+    # try:
+    #     lambda_value = float(sys.argv[6])
+    # except:
+    #     lambda_value = 2.1
 
-    try:
-        log_mass_removal_p_norm = np.log(float(sys.argv[8]))
-    except:
-        log_mass_removal_p_norm = 0.0
+    # try:
+    #     major_axis_length = float(sys.argv[7])
+    # except:
+    #     major_axis_length = 1.4
 
-    mass_removal_p_norm = np.exp(log_mass_removal_p_norm)
-
-    use_p_norm = False
+    # try:
+    #     log_mass_removal_p_norm = np.log(float(sys.argv[8]))
+    # except:
+    #     log_mass_removal_p_norm = 0.0
 
     (
         POLICY_LIST_COMPRESSED,
         RISK_ACCUMULATION,
         POINTS_ARRAY,
     ) = run_step_policy_synthesis(
-        n_max,
-        alpha,
-        n_points,
-        lambda_value,
-        major_axis_length,
-        log_mass_removal_p_norm,
-        use_p_norm=use_p_norm,
+        args.n_max,
+        args.alpha,
+        args.n_points,
+        args.lambda_value,
+        args.major_axis_length,
+        args.log_p_norm,
+        args.use_p_norm,
     )
 
     base_path = os.getcwd()
-    results_path = f"sequentialized_barnard_tests/policies/n_max_{n_max}_alpha_{alpha}_shape_parameter_{log_mass_removal_p_norm}_pnorm_{use_p_norm}/"
+    results_path = f"sequentialized_barnard_tests/policies/n_max_{args.n_max}_alpha_{args.alpha}_shape_parameter_{args.log_p_norm}_pnorm_{args.use_p_norm}/"
     full_save_path = os.path.join(base_path, results_path)
     if not os.path.isdir(full_save_path):
         os.makedirs(full_save_path)
