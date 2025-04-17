@@ -277,6 +277,10 @@ def run_step_policy_synthesis(
                 base_accumulated_risk
             ) + copy.deepcopy(FEATURES @ key_weights)
 
+        else:
+            # Need to ensure that this is well-defined for the policy_compression step
+            POLICY_ARRAY = np.zeros((n_max + 1, n_max + 1))
+
         # Copy post to pre in advance of the next step of the loop
         STATE_DIST_PRE = copy.deepcopy(STATE_DIST_POST)
 
@@ -310,7 +314,7 @@ if __name__ == "__main__":
     try:
         n_points = int(sys.argv[5])
     except:
-        n_points = int(49)
+        n_points = int(99)
 
     try:
         lambda_value = float(sys.argv[6])
@@ -351,10 +355,5 @@ if __name__ == "__main__":
     if not os.path.isdir(full_save_path):
         os.makedirs(full_save_path)
 
-    try:
-        with open(full_save_path + "policy_compressed.pkl", "wb") as filename:
-            pickle.dump(POLICY_LIST_COMPRESSED, filename)
-    except:
-        raise ValueError(
-            "Could not find configuration file! Run 'python make_config.py Nmax alpha min_gap random_seed_integer data_dependent_flag' to create it!"
-        )
+    with open(full_save_path + "policy_compressed.pkl", "wb") as filename:
+        pickle.dump(POLICY_LIST_COMPRESSED, filename)
