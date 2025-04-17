@@ -1,13 +1,22 @@
 """Method to run policy synthesis for STEP procedure.
 
 Policies are stored in sequentialized_barnard_tests/policies.
+
+Example Default Usage (all equivalent, using default params):
+
+    (1) python scripts/synthesize_step_policy.py
+    (2) python scripts/synthesize_step_policy.py -n 200 -a 0.05
+    (3) python scripts/synthesize_step_policy.py --n_max 200 --alpha 0.05 --n_points 89
+
+Example Non-Default Parameter Usage:
+
+    python scripts/synthesize_step_policy.py -n 400
 """
 
 import argparse
 import copy
 import os
 import pickle
-import sys
 
 import numpy as np
 from numpy.typing import ArrayLike
