@@ -11,11 +11,9 @@ URL: https://www.arxiv.org/abs/2503.10966
 import os
 import pickle
 import warnings
-from typing import Dict, Tuple, Union
+from typing import Union
 
 import numpy as np
-from numpy.typing import ArrayLike
-from tqdm import tqdm
 
 from sequentialized_barnard_tests.base import (
     Decision,
@@ -26,10 +24,24 @@ from sequentialized_barnard_tests.base import (
 
 
 class StepTest(SequentialTestBase):
-    """_summary_
+    """STEP test for comparing two Bernoulli distributions (2x2 Contingency Table).
 
-    Args:
-        SequentialTestBase (_type_): _description_
+    This class defines the sequential test for the 2x2 Bernoulli contingency table as a the
+    near-optimal, optimization-based solution to the optimal stopping PDE. This procedure
+    synthesizes an evaluation policy which defines near-optimal decision making over the
+    realization of the natural filtration (rollout results) in the evaluation regime.
+
+    Attributes:
+        alternative (Hypothesis): the alternative hypothesis for the statistical test
+        n_max (int): the maximal number of trials willing to be evaluated per robot policy
+        alpha (float): the maximal allowed Type-1 Error of the evaluation procedure
+        shape_parameter (float): the shape parameter of the risk budget.
+        use_p_norm (bool): whether to use p_norm shape (True) or partial sums of the zeta function (False).
+        policy (List[ArrayLike]): the evaluation decision-making algorithm. Length n_max, each element is an associated array.
+        need_new_policy (bool): indicator that a policy has not been previously synthesized for these test parameters.
+        _state (ArrayLike): internal state for a particular test. Set to np.zeros(2) when the test is reset.
+        _t (int): internal time state for a particular test. Set to 0 when the test is reset.
+        _current_decision (Decision): internal decision state for a particular test. Set to FailToDecide when test is reset.
     """
 
     def __init__(
@@ -39,22 +51,22 @@ class StepTest(SequentialTestBase):
         alpha: float,
         shape_parameter: float = 0.0,
         use_p_norm: bool = False,
-        random_seed: int = 42,
+        random_seed: int = None,
         verbose: bool = False,
     ) -> None:
-        """_summary_
+        """Initializes the test object.
 
         Args:
-            alternative (Hypothesis): _description_
-            n_max (int): _description_
-            alpha (float): _description_
-            shape_parameter (float, optional): _description_. Defaults to 0.0.
-            use_p_norm (bool, optional): _description_. Defaults to False.
-            random_seed (int, optional): _description_. Defaults to 42.
-            verbose (bool, optional): _description_. Defaults to False.
+            alternative (Hypothesis): Specification of the alternative hypothesis.
+            n_max (int): Maximal sequence length. Must be greater than 0.
+            alpha (float): Significance level of the test. Must lie in (0., 1.)
+            shape_parameter (float, optional): Shape parameter of the risk budget. Defaults to 0.0.
+            use_p_norm (bool, optional): Toggle use of p_norm vs zeta function shape families. Defaults to False.
+            random_seed (int, optional): Seed for internal randomness of the test. Defaults to None.
+            verbose (bool, optional): If True, print the outputs to stdout. Defaults to False. Defaults to False.
 
         Raises:
-            ValueError: _description_
+            ValueError: If the n_max and alpha inputs are invalid
         """
         # Handle erroneous inputs
         try:
@@ -83,6 +95,9 @@ class StepTest(SequentialTestBase):
         self._state = None
         self._t = None
         self._current_decision = None
+        self.random_seed = random_seed
+
+        # Random generator object initialized and reset in self.reset
         self.reset(verbose)
 
     def step(
@@ -186,9 +201,10 @@ class StepTest(SequentialTestBase):
                 return result
 
             else:  # Current state is in probabilistic regime
-                random_scalar = np.random.rand(
-                    1
-                )  # TODO: add some kind of seeding procedure to ensure repeatibility
+                # random_scalar = np.random.rand(
+                #     1
+                # )  # TODO: add some kind of seeding procedure to ensure repeatibility
+                random_scalar = self.rng.random(1)
                 comparator_rv = decision_array[y_absolute - critical_zero_y]
                 if (
                     random_scalar <= comparator_rv
@@ -212,7 +228,8 @@ class StepTest(SequentialTestBase):
         self,
         verbose: bool = False,
     ) -> None:
-        """Resets the underlying STEP process.
+        """Resets the underlying STEP process, including setting the random
+        generator object seed.
 
         Args:
             verbose (bool, optional): If True, print the outputs to stdout.
@@ -221,6 +238,11 @@ class StepTest(SequentialTestBase):
         self._state = np.zeros(2)
         self._t = int(0)
         self._current_decision = Decision.FailToDecide
+
+        if self.random_seed is not None:
+            self.rng = np.random.default_rng(seed=self.random_seed)
+        else:
+            self.rng = np.random.default_rng()
 
         if self.alternative == Hypothesis.P0MoreThanP1:
             if verbose:
@@ -260,10 +282,24 @@ class StepTest(SequentialTestBase):
 
 
 class MirroredStepTest(StepTest):
-    """_summary_
+    """Mirrored STEP test for comparing two Bernoulli distributions (2x2 Contingency Table).
 
-    Args:
-        StepTest (_type_): _description_
+    This class defines the sequential test for the 2x2 Bernoulli contingency table as a the
+    near-optimal, optimization-based solution to the optimal stopping PDE. This procedure
+    synthesizes an evaluation policy which defines near-optimal decision making over the
+    realization of the natural filtration (rollout results) in the evaluation regime.
+
+    Attributes:
+        alternative (Hypothesis): the alternative hypothesis for the statistical test
+        n_max (int): the maximal number of trials willing to be evaluated per robot policy
+        alpha (float): the maximal allowed Type-1 Error of the evaluation procedure
+        shape_parameter (float): the shape parameter of the risk budget.
+        use_p_norm (bool): whether to use p_norm shape (True) or partial sums of the zeta function (False).
+        policy (List[ArrayLike]): the evaluation decision-making algorithm. Length n_max, each element is an associated array.
+        need_new_policy (bool): indicator that a policy has not been previously synthesized for these test parameters.
+        _state (ArrayLike): internal state for a particular test. Set to np.zeros(2) when the test is reset.
+        _t (int): internal time state for a particular test. Set to 0 when the test is reset.
+        _current_decision (Decision): internal decision state for a particular test. Set to FailToDecide when test is reset.
     """
 
     def __init__(
@@ -276,16 +312,16 @@ class MirroredStepTest(StepTest):
         random_seed: int = 42,
         verbose: bool = False,
     ) -> None:
-        """_summary_
+        """Initializes the test object.
 
         Args:
-            alternative (Hypothesis): _description_
-            n_max (int): _description_
-            alpha (float): _description_
-            shape_parameter (float, optional): _description_. Defaults to 0.0.
-            use_p_norm (bool, optional): _description_. Defaults to False.
-            random_seed (int, optional): _description_. Defaults to 42.
-            verbose (bool, optional): _description_. Defaults to False.
+            alternative (Hypothesis): Specification of the alternative hypothesis.
+            n_max (int): Maximal sequence length. Must be greater than 0.
+            alpha (float): Significance level of the test. Must lie in (0., 1.)
+            shape_parameter (float, optional): Shape parameter of the risk budget. Defaults to 0.0.
+            use_p_norm (bool, optional): Toggle use of p_norm vs zeta function shape families. Defaults to False.
+            random_seed (int, optional): Seed for internal randomness of the test. Defaults to None.
+            verbose (bool, optional): If True, print the outputs to stdout. Defaults to False. Defaults to False.
         """
         super().__init__(
             alternative,
@@ -398,9 +434,10 @@ class MirroredStepTest(StepTest):
                 return result
 
             else:  # Current state is in probabilistic regime
-                random_scalar = np.random.rand(
-                    1
-                )  # TODO: add some kind of seeding procedure to ensure repeatibility
+                # random_scalar = np.random.rand(
+                #     1
+                # )  # TODO: add some kind of seeding procedure to ensure repeatibility
+                random_scalar = self.rng.random(1)
                 comparator_rv = decision_array[y_absolute - critical_zero_y]
                 if (
                     random_scalar <= comparator_rv
@@ -452,9 +489,10 @@ class MirroredStepTest(StepTest):
                 return result
 
             else:  # Current state is in probabilistic regime
-                random_scalar = np.random.rand(
-                    1
-                )  # TODO: add some kind of seeding procedure to ensure repeatibility
+                # random_scalar = np.random.rand(
+                #     1
+                # )  # TODO: add some kind of seeding procedure to ensure repeatibility
+                random_scalar = self.rng.random(1)
                 comparator_rv = decision_array[y_absolute - critical_zero_y]
                 if (
                     random_scalar <= comparator_rv

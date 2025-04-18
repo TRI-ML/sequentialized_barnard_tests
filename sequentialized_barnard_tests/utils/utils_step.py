@@ -97,7 +97,7 @@ def compress_policy_simple(t: int, policy_array_at_time_t: ArrayLike):
         policy_array_at_time_t (ArrayLike): Full policy array. Size (t+1, t+1)
 
     Returns:
-        (List): List of cutoffs by x for the current optimal policy. Encodes optimal actions to take on sequential data.
+        policy_compressed (List[ArrayLike]): List of cutoffs by x for the current optimal policy. Encodes optimal actions to take on sequential data.
     """
     try:
         del policy_compressed
