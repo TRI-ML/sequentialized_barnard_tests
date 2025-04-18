@@ -146,15 +146,18 @@ class StepTest(SequentialTestBase):
             return result
 
         if self.policy is None:
-            warnings.warn(
-                "No policy assigned, so will default to Fail to Decide. Ensure "
-                "that a policy is successfully loaded before stepping through "
-                "the data!"
-            )
-            info = {"Time": self._t, "State": self._state}
-            result = TestResult(self._current_decision, info)
+            # warnings.warn(f"{self.policy_path}")
+            self.load_existing_policy()
+            # warnings.warn(
+            #     "No policy assigned, so will default to Fail to Decide. Ensure "
+            #     "that a policy is successfully loaded before stepping through "
+            #     "the data!"
+            # )
+            if self.policy is None:
+                info = {"Time": self._t, "State": self._state}
+                result = TestResult(self._current_decision, info)
 
-            return result
+                return result
 
         # Update the state to incorporate new data.
         # NOTE: the state is the running SUM, not the running mean!
@@ -284,9 +287,10 @@ class StepTest(SequentialTestBase):
                 self.policy = pickle.load(filename)
             self.need_new_policy = False
         except:
-            warnings.warn(
-                "Unable to find policy with the assigned test parameters. An additional policy synthesis procedure may be required"
-            )
+            warnings.warn(f"Current policy path: {policy_path}")
+            # "Unable to find policy with the assigned test parameters. An additional policy synthesis procedure may be required."
+            # f"Current policy path: {policy_path}"
+
         self.policy_path = policy_path
 
         # Because a policy has been (attempted to be) loaded, run self.reset.
@@ -390,15 +394,17 @@ class MirroredStepTest(StepTest):
             return result
 
         if self.policy is None:
-            warnings.warn(
-                "No policy assigned, so will default to Fail to Decide. Ensure "
-                "that a policy is successfully loaded before stepping through "
-                "the data!"
-            )
-            info = {"Time": self._t, "State": self._state}
-            result = TestResult(self._current_decision, info)
+            # warnings.warn(
+            #     "No policy assigned, so will default to Fail to Decide. Ensure "
+            #     "that a policy is successfully loaded before stepping through "
+            #     "the data!"
+            # )
+            self.load_existing_policy()
+            if self.policy is None:
+                info = {"Time": self._t, "State": self._state}
+                result = TestResult(self._current_decision, info)
 
-            return result
+                return result
 
         # Update the state to incorporate new data.
         # NOTE: the state is the running SUM, not the running mean!
