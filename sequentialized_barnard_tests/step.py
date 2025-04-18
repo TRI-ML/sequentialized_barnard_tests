@@ -11,6 +11,7 @@ URL: https://www.arxiv.org/abs/2503.10966
 import os
 import pickle
 import warnings
+from pathlib import Path
 from typing import Union
 
 import numpy as np
@@ -263,11 +264,21 @@ class StepTest(SequentialTestBase):
             verbose (bool, optional): If True, print the outputs to stdout.
                 Defaults to False.
         """
+        # print(str(Path(os.path.dirname(os.path.abspath(__file__))).resolve()))
+        # print(os.path.dirname(os.path.abspath(__file__)))
+        # print(os.path.dirname(__file__))
+        # self.policy_path = os.path.join(
+        #     str(
+        #         Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+        #     ),  # os.path.dirname(os.path.abspath(__file__)),
+        #     f"policies/n_max_{self.n_max}_alpha_{self.alpha}_shape_parameter_{self.shape_parameter}_pnorm_{self.use_p_norm}/policy_compressed.pkl",
+        # )
         policy_path = os.path.join(
             os.path.dirname(__file__),
             f"policies/n_max_{self.n_max}_alpha_{self.alpha}_shape_parameter_{self.shape_parameter}_pnorm_{self.use_p_norm}/",
             "policy_compressed.pkl",
         )
+
         try:
             with open(policy_path, "rb") as filename:
                 self.policy = pickle.load(filename)
@@ -276,6 +287,7 @@ class StepTest(SequentialTestBase):
             warnings.warn(
                 "Unable to find policy with the assigned test parameters. An additional policy synthesis procedure may be required"
             )
+        self.policy_path = policy_path
 
         # Because a policy has been (attempted to be) loaded, run self.reset.
         self.reset(verbose)
@@ -514,3 +526,12 @@ class MirroredStepTest(StepTest):
             result = TestResult(self._current_decision, info)
 
             return result
+
+
+# if __name__ == "__main__":
+#     step = StepTest(Hypothesis.P0LessThanP1, 200, 0.05)
+#     print(step.policy_path)
+#     print()
+#     step = StepTest(Hypothesis.P0LessThanP1, 500, 0.05)
+#     print(step.policy_path)
+#     print()
