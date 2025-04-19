@@ -11,6 +11,9 @@ setup(
     package_data={
         "sequentialized_barnard_tests": [
             "data/lai_calibration_data.npy",
+            "policies/n_max_100_alpha_0.05_shape_parameter_0.0_pnorm_False/policy_compressed.pkl",
+            "policies/n_max_200_alpha_0.05_shape_parameter_0.0_pnorm_False/policy_compressed.pkl",
+            "policies/n_max_500_alpha_0.05_shape_parameter_0.0_pnorm_False/policy_compressed.pkl",
         ],
     },
     install_requires=[

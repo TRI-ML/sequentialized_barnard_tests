@@ -14,7 +14,7 @@ paper_data_path = str(
     Path(
         os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            "../../sequentialized_barnard_tests/eval_data/",
+            "../eval_data/",
         )
     ).resolve()
 )

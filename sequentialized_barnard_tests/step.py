@@ -12,7 +12,7 @@ import os
 import pickle
 import warnings
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -40,9 +40,6 @@ class StepTest(SequentialTestBase):
         use_p_norm (bool): whether to use p_norm shape (True) or partial sums of the zeta function (False).
         policy (List[ArrayLike]): the evaluation decision-making algorithm. Length n_max, each element is an associated array.
         need_new_policy (bool): indicator that a policy has not been previously synthesized for these test parameters.
-        _state (ArrayLike): internal state for a particular test. Set to np.zeros(2) when the test is reset.
-        _t (int): internal time state for a particular test. Set to 0 when the test is reset.
-        _current_decision (Decision): internal decision state for a particular test. Set to FailToDecide when test is reset.
     """
 
     def __init__(
@@ -52,7 +49,7 @@ class StepTest(SequentialTestBase):
         alpha: float,
         shape_parameter: float = 0.0,
         use_p_norm: bool = False,
-        random_seed: int = None,
+        random_seed: Optional[int] = None,
         verbose: bool = False,
     ) -> None:
         """Initializes the test object.
@@ -289,9 +286,10 @@ class StepTest(SequentialTestBase):
                 self.policy = pickle.load(filename)
             self.need_new_policy = False
         except:
-            warnings.warn(f"Current policy path: {policy_path}")
-            # "Unable to find policy with the assigned test parameters. An additional policy synthesis procedure may be required."
-            # f"Current policy path: {policy_path}"
+            warnings.warn(
+                f"Current policy path: {policy_path}"
+                "Unable to find policy with the assigned test parameters. An additional policy synthesis procedure may be required."
+            )
 
         self.policy_path = policy_path
 
@@ -315,9 +313,6 @@ class MirroredStepTest(StepTest):
         use_p_norm (bool): whether to use p_norm shape (True) or partial sums of the zeta function (False).
         policy (List[ArrayLike]): the evaluation decision-making algorithm. Length n_max, each element is an associated array.
         need_new_policy (bool): indicator that a policy has not been previously synthesized for these test parameters.
-        _state (ArrayLike): internal state for a particular test. Set to np.zeros(2) when the test is reset.
-        _t (int): internal time state for a particular test. Set to 0 when the test is reset.
-        _current_decision (Decision): internal decision state for a particular test. Set to FailToDecide when test is reset.
     """
 
     def __init__(
@@ -534,12 +529,3 @@ class MirroredStepTest(StepTest):
             result = TestResult(self._current_decision, info)
 
             return result
-
-
-# if __name__ == "__main__":
-#     step = StepTest(Hypothesis.P0LessThanP1, 200, 0.05)
-#     print(step.policy_path)
-#     print()
-#     step = StepTest(Hypothesis.P0LessThanP1, 500, 0.05)
-#     print(step.policy_path)
-#     print()
