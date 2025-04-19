@@ -97,7 +97,7 @@ def compress_policy_simple(t: int, policy_array_at_time_t: ArrayLike):
         policy_array_at_time_t (ArrayLike): Full policy array. Size (t+1, t+1)
 
     Returns:
-        (List): List of cutoffs by x for the current optimal policy. Encodes optimal actions to take on sequential data.
+        policy_compressed (List[ArrayLike]): List of cutoffs by x for the current optimal policy. Encodes optimal actions to take on sequential data.
     """
     try:
         del policy_compressed
@@ -424,11 +424,11 @@ def reconstruct_rejection_region(
                 # Rejection region
                 STATE_DIST_POST[idx0, idx1, :] *= 1.0 - key_weights[feature_counter]
                 POLICY_ARRAY[idx0, idx1] = key_weights[feature_counter]
-                DISPOSABLE_CANDIDATE_STATE_ENCODING[idx0, idx1] = 0.0
 
                 # Acceptance region
                 STATE_DIST_POST[idx1, idx0, :] *= 1.0 - key_weights[feature_counter]
                 POLICY_ARRAY[idx1, idx0] = -key_weights[feature_counter]
+                DISPOSABLE_CANDIDATE_STATE_ENCODING[idx0, idx1] = 0.0
             else:
                 # Rejection region
                 STATE_DIST_POST[idx0, idx1, :] *= 1.0 - key_weights[feature_counter]
@@ -446,6 +446,8 @@ def reconstruct_rejection_region(
                 POLICY_ARRAY[idx1, idx0] = -key_weights[feature_counter]
                 POLICY_ARRAY[t - idx0, t - idx1] = -key_weights[feature_counter]
 
+                DISPOSABLE_CANDIDATE_STATE_ENCODING[idx0, idx1] = 0.0
+                DISPOSABLE_CANDIDATE_STATE_ENCODING[t - idx1, t - idx0] = 0.0
             feature_counter += 1
 
     n_zero_features = int(np.sum(CARRY_OVER_STATE_ENCODING))

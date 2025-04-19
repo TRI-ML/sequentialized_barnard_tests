@@ -220,7 +220,7 @@ def run_step_policy_synthesis(
                     pass
                 else:
                     if idx0 + idx1 == t:
-                        FEATURES_BASE[:, feature_counter] = copy.deepcopy(
+                        FEATURES_BASE[:, feature_counter] = 2.0 * copy.deepcopy(
                             STATE_DIST_POST[idx0, idx1, :]
                         )
                         DISPOSABLE_CANDIDATE_STATE_ENCODING[idx0, idx1] = 0.0
@@ -394,6 +394,25 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if args.n_max == 100:
+        lambda_value = 2.1
+        major_axis_length = 1.4
+    elif args.n_max == 200:
+        lambda_value = 2.1
+        major_axis_length = 1.15
+    elif args.n_max == 300:
+        lambda_value = 2.1
+        major_axis_length = 1.4
+    elif args.n_max == 400:
+        lambda_value = 2.1
+        major_axis_length = 1.4
+    elif args.n_max == 500:
+        lambda_value = 2.2
+        major_axis_length = 1.35
+    else:
+        lambda_value = args.lambda_value
+        major_axis_length = args.major_axis_length
+
     (
         POLICY_LIST_COMPRESSED,
         RISK_ACCUMULATION,
@@ -402,8 +421,8 @@ if __name__ == "__main__":
         args.n_max,
         args.alpha,
         args.n_points,
-        args.lambda_value,
-        args.major_axis_length,
+        lambda_value,
+        major_axis_length,
         args.log_p_norm,
         args.use_p_norm,
     )
