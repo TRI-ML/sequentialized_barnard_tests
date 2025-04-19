@@ -132,18 +132,20 @@ class StepTest(SequentialTestBase):
                 )
             )
 
-        # Iterate time state
-        self._t += 1
-
         # Handle case in which we have exceeded n_max
         if self._t > self.n_max:
             warnings.warn(
                 "Have exceeded the allowed number of evals; not updating internal states."
             )
+            self._t += 1
+
             info = {"Time": self._t, "State": self._state}
             result = TestResult(self._current_decision, info)
 
             return result
+
+        # Iterate time state
+        self._t += 1
 
         if self.policy is None:
             # warnings.warn(f"{self.policy_path}")
@@ -181,7 +183,7 @@ class StepTest(SequentialTestBase):
             # Therefore, look only to REJECT in standard setting
 
             # Extract relevant component of policy
-            decision_array = self.policy[self._t][x_absolute]
+            decision_array = self.policy[self._t - 1][x_absolute]
 
             # Number of non-zero / non-unity policy bins at this x and t
             L = decision_array.shape[0] - 1
