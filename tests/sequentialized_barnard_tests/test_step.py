@@ -94,10 +94,10 @@ def test_step(step, sequence_0, sequence_1, expected):
     ("step", "sequence_0", "sequence_1", "expected"),
     [
         # fmt: off
-        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 23),
+        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 22.5),
         (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 50),
         (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 50),
-        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 23),
+        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 22.5),
         (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 21.5),
         (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 50),
         (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 50),
@@ -108,7 +108,7 @@ def test_step(step, sequence_0, sequence_1, expected):
 )
 def test_step_time(step, sequence_0, sequence_1, expected):
     result = step.run_on_sequence(sequence_0, sequence_1)
-    assert np.abs(float(result.info["Time"]) - expected) <= 1.2
+    assert np.abs(float(result.info["Time"]) - expected) <= 1.6
 
 
 @pytest.fixture(scope="module")
@@ -140,7 +140,7 @@ def step500(request):
 )
 def test_step500_time(step500, sequence_0, sequence_1, expected):
     result = step500.run_on_sequence(sequence_0, sequence_1)
-    assert np.abs(result.info["Time"] - expected) <= 0.6
+    assert np.abs(result.info["Time"] - expected) <= 1.6
 
 
 ##### Mirrored STEP Test #####

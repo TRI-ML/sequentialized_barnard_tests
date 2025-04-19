@@ -67,6 +67,9 @@ class SaviTest(SequentialTestBase):
         # Bayesian estimate of the Bernoulli parameter P1.
         self._estimated_p_1 = None
 
+        # Time state for decision information
+        self._t = None
+
         self.reset(verbose)
 
     @property
@@ -109,6 +112,9 @@ class SaviTest(SequentialTestBase):
                     f"datum_0 == {datum_0} and datum_1 == {datum_1}."
                 )
             )
+
+        self._t += 1
+
         if (
             self.alternative == Hypothesis.P0MoreThanP1
             and self._estimated_p_0 <= self._estimated_p_1
@@ -160,7 +166,7 @@ class SaviTest(SequentialTestBase):
             decision = Decision.AcceptAlternative
         else:
             decision = Decision.FailToDecide
-        info = {"p_value": self.p_value, "e_value": self.e_value}
+        info = {"p_value": self.p_value, "e_value": self.e_value, "Time": self._t}
         result = TestResult(decision, info)
 
         return result
@@ -175,6 +181,7 @@ class SaviTest(SequentialTestBase):
             print("Reset the SAVI process under the following hypotheses:")
         self._log_e_value = 0.0
         self._unclipped_p_value = 1.0
+        self._t = int(0)
         if self.alternative == Hypothesis.P0MoreThanP1:
             if verbose:
                 print("    Null:        P0 <= P1")
