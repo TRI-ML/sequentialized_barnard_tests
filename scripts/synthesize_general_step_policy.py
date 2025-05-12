@@ -62,6 +62,8 @@ def run_step_policy_synthesis(
         use_p_norm (bool, optional): Toggle between partial_zeta and p_norm shapes. Defaults to False (partial_zeta shape).
         custom_differential_risk_budget (ArrayLike, optional): If given, sets the exact differential risk budget, OVERRIDING p_norm v.s. partial_zeta selection. If not none, all elements must be nonnegative. Defaults to None.
         dead_time (int, optional): Time to wait before attempting any rejection / acceptance. If None, then logarithmic in n_max. Must be positive; defaults to None.
+        save_policy_array (bool, optional): Whether to save ground truth uncompressed policy array. Defaults to False.
+        save_policy_path (str, optional): Path to save ground truth uncompressed policy array. Defaults to None.
         verbose (bool, optional): Toggle the printing of progress measures and additional information throughout the synthesis procedure. Defaults to False.
 
     Raises:
@@ -85,6 +87,11 @@ def run_step_policy_synthesis(
     except:
         raise ValueError(
             "Invalid argument in set (n_max, alpha, n_points, lambda_value, major_axis_length)"
+        )
+
+    if save_policy_array and save_policy_path is None:
+        raise ValueError(
+            "Code is set to save the policy array (save_policy_array is True), but no path has been specified (save_policy_path is None)"
         )
 
     ##########
@@ -126,8 +133,8 @@ def run_step_policy_synthesis(
     # HANDLE Kernels, storage matrices, and encoding matrices
     # HANDLE capacity to compress the policy as we go
     ##########
-    # TODO: more principled setup than the empirical shape parameters for quadratic_score
-    # Compute extremal 0 < p_min, p_max < 1 that contain risk of positive delta
+    # # TODO: more principled setup than the empirical shape parameters for quadratic_score
+    # # Compute extremal 0 < p_min, p_max < 1 that contain risk of positive delta
     # p_max = np.exp(np.log(1.0 - alpha - 1e-5) / n_max)
     # p_min = 1.0 - p_max
 
@@ -520,8 +527,8 @@ if __name__ == "__main__":
     if not os.path.isdir(full_save_path):
         os.makedirs(full_save_path)
 
+    special_policy_array_save_path = os.path.join(full_save_path, f"array/")
     if args.save_array:
-        special_policy_array_save_path = os.path.join(full_save_path, f"array/")
         if not os.path.isdir(special_policy_array_save_path):
             os.makedirs(special_policy_array_save_path)
 
