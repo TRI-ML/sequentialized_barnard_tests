@@ -211,8 +211,10 @@ class LaiTest(SequentialTestBase):
                     f"datum_0 == {datum_0} and datum_1 == {datum_1}."
                 )
             )
+
         # Iterate time (total number of pairs seen)
         self._t += 1
+
         if self._t > self.n_max:
             warnings.warn(
                 "Have exceeded the allowed number of evals; not updating internal states."

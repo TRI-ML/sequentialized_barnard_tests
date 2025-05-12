@@ -1,0 +1,7 @@
+# Notes
+# Requires: ffmpeg
+# General recommendation -- framerate 10 up to n_max=300, then framerate 20
+# Make sure to verify the correct parameters
+
+mkdir vid/n_max_500_alpha_0.01_shape_parameter_0.0_pnorm_False
+ffmpeg -framerate 20 -i im/n_max_500_alpha_0.01_shape_parameter_0.0_pnorm_False/%03d.png -c:v libx264 -r 20 vid/n_max_500_alpha_0.01_shape_parameter_0.0_pnorm_False/policy_synthesis.mp4
