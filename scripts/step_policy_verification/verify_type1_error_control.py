@@ -407,7 +407,7 @@ if __name__ == "__main__":
         ax.plot(final_risk[:, k])
 
     policy_id_str = f"n_max_{args.n_max}_alpha_{args.alpha}_shape_parameter_{args.log_p_norm}_pnorm_{args.use_p_norm}/"
-    policy_img_save_str = "scripts/im/" + policy_id_str
+    policy_img_save_str = "scripts/im/policies/" + policy_id_str
     if not os.path.isdir(policy_img_save_str):
         os.makedirs(policy_img_save_str)
 

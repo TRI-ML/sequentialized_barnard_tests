@@ -61,7 +61,7 @@ def visualize_step_policy(
         f"sequentialized_barnard_tests/policies/" + policy_id_str + f"array/time_"
     )
     try:
-        np.load(check_array_base_str + f"{t}.npy")
+        np.load(check_array_base_str + f"{5}.npy")
         compute_reconstruction_error_flag = True
     except:
         compute_reconstruction_error_flag = False
@@ -69,7 +69,7 @@ def visualize_step_policy(
     if compute_reconstruction_error_flag:
         error_by_timestep = np.zeros(n_max + 1)
 
-    media_save_path = "media/im/policies" + policy_id_str
+    media_save_path = "media/im/policies/" + policy_id_str
 
     if not os.path.isdir(media_save_path):
         os.makedirs(media_save_path)
