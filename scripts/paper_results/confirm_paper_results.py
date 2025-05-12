@@ -29,6 +29,28 @@ def visualize_step_policy_and_trajectory(
     mirrored: bool = True,
     alternative: Hypothesis = Hypothesis.P0LessThanP1,
 ):
+    """Modified version of visualize_step_policy.py which also allows for visualization of the data
+       trajectory (green star). This allows us to verify that the policy's actions are consistent with
+       the policy visualization (e.g., that there is not an offset in the visualization vis-a-vis the data).
+
+    Args:
+        n_max (int): _description_
+        alpha (float): _description_
+        time_of_decision (int): _description_
+        input_trajectory (ArrayLike): _description_
+        task_string (str): _description_
+        risk_budget_shape_parameter (float, optional): _description_. Defaults to 0.0.
+        use_p_norm (bool, optional): _description_. Defaults to False.
+        mirrored (bool, optional): _description_. Defaults to True.
+        alternative (Hypothesis, optional): _description_. Defaults to Hypothesis.P0LessThanP1.
+
+    Raises:
+        ValueError: _description_
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+    """
     STEP_test = MirroredStepTest(
         alternative, n_max, alpha, risk_budget_shape_parameter, use_p_norm
     )
@@ -41,7 +63,7 @@ def visualize_step_policy_and_trajectory(
 
     # Set up and create the directory in which to save the appropriate images.
     policy_id_str = f"n_max_{n_max}_alpha_{alpha}_shape_parameter_{risk_budget_shape_parameter}_pnorm_{use_p_norm}/"
-    media_save_path = "scripts/im/" + policy_id_str + "/" + task_string + "/"
+    media_save_path = "scripts/im/policies/" + policy_id_str + "/" + task_string + "/"
 
     if not os.path.isdir(media_save_path):
         os.makedirs(media_save_path)
@@ -157,7 +179,7 @@ if __name__ == "__main__":
         Path(
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
-                "../tests/eval_data/",
+                "../../tests/eval_data/",
             )
         ).resolve()
     )
@@ -280,11 +302,8 @@ if __name__ == "__main__":
     print("Lai-200  time-to-decision: ", foldredtowel_result_lai_200.info["Time"])
     print("Lai-500  time-to-decision: ", foldredtowel_result_lai_500.info["Time"])
     print("STEP-50 time-to-decision: ", foldredtowel_result_step_50.info["Time"])
-    # print(foldredtowel_result_step_50.decision)
     print("STEP-200 time-to-decision: ", foldredtowel_result_step_200.info["Time"])
-    # print(foldredtowel_result_step_200.decision)
     print("STEP-500 time-to-decision: ", foldredtowel_result_step_500.info["Time"])
-    # print(foldredtowel_result_step_500.decision)
     print(
         "SAVI     time-to-decision: ",
         foldredtowel_result_savi.info["result_for_alternative"].info["Time"],
@@ -531,19 +550,19 @@ if __name__ == "__main__":
     #     task_string="StackCube",
     # )
 
-    _ = visualize_step_policy_and_trajectory(
-        500,
-        0.01,
-        stackcube_result_step_500.info["Time"] + 1,
-        np.concatenate(
-            (
-                eval_sim_stack_cube[:, 1].reshape(-1, 1),
-                eval_sim_stack_cube[:, 0].reshape(-1, 1),
-            ),
-            axis=1,
-        ),
-        task_string="StackCube",
-    )
+    # _ = visualize_step_policy_and_trajectory(
+    #     500,
+    #     0.01,
+    #     stackcube_result_step_500.info["Time"] + 1,
+    #     np.concatenate(
+    #         (
+    #             eval_sim_stack_cube[:, 1].reshape(-1, 1),
+    #             eval_sim_stack_cube[:, 0].reshape(-1, 1),
+    #         ),
+    #         axis=1,
+    #     ),
+    #     task_string="StackCube",
+    # )
 
     # _ = visualize_step_policy_and_trajectory(
     #     500,
