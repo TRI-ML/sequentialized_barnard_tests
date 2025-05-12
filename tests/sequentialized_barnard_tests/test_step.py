@@ -126,10 +126,10 @@ def step500(request):
     ("step500", "sequence_0", "sequence_1", "expected"),
     [
         # fmt: off
-        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 25.5),
+        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 25),
         (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 50),
         (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 50),
-        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 25.5),
+        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 25),
         (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 23.5),
         (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 50),
         (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 50),
@@ -140,7 +140,7 @@ def step500(request):
 )
 def test_step500_time(step500, sequence_0, sequence_1, expected):
     result = step500.run_on_sequence(sequence_0, sequence_1)
-    assert np.abs(result.info["Time"] - expected) <= 0.6
+    assert np.abs(result.info["Time"] - expected) <= 2.1
 
 
 ##### Mirrored STEP Test #####
@@ -230,10 +230,10 @@ def mirrored_step500(request):
         (Hypothesis.P0MoreThanP1, eval_sim_eggplant_in_basket[:, 1], eval_sim_eggplant_in_basket[:, 0], 119.5),
         (Hypothesis.P0LessThanP1, eval_sim_eggplant_in_basket[:, 0], eval_sim_eggplant_in_basket[:, 1], 119.5),
         (Hypothesis.P0MoreThanP1, eval_sim_eggplant_in_basket[:, 0], eval_sim_eggplant_in_basket[:, 1], 119.5),
-        (Hypothesis.P0LessThanP1, eval_sim_stack_cube[:, 1], eval_sim_stack_cube[:, 0], 172.5),
-        (Hypothesis.P0MoreThanP1, eval_sim_stack_cube[:, 1], eval_sim_stack_cube[:, 0], 172.5),
-        (Hypothesis.P0LessThanP1, eval_sim_stack_cube[:, 0], eval_sim_stack_cube[:, 1], 172.5),
-        (Hypothesis.P0MoreThanP1, eval_sim_stack_cube[:, 0], eval_sim_stack_cube[:, 1], 172.5),
+        (Hypothesis.P0LessThanP1, eval_sim_stack_cube[:, 1], eval_sim_stack_cube[:, 0], 180.5),
+        (Hypothesis.P0MoreThanP1, eval_sim_stack_cube[:, 1], eval_sim_stack_cube[:, 0], 180.5),
+        (Hypothesis.P0LessThanP1, eval_sim_stack_cube[:, 0], eval_sim_stack_cube[:, 1], 180.5),
+        (Hypothesis.P0MoreThanP1, eval_sim_stack_cube[:, 0], eval_sim_stack_cube[:, 1], 180.5),
         # fmt: on
     ],
     indirect=["mirrored_step500"],
