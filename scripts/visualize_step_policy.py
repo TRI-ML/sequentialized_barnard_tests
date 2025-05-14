@@ -24,6 +24,26 @@ def visualize_step_policy(
     mirrored: bool = True,
     alternative: Hypothesis = Hypothesis.P0LessThanP1,
 ):
+    """Tool to visualize the compressed STEP policy in an array-like lookup table format (i.e., in decompressed
+       form). If there is an associated saved uncompressed policy, then the function will also load the policy
+       and store reconstruction error rates to verify the faithful / lossless nature of the reconstruction.
+
+    Args:
+        n_max (int): Maximum number of evaluation trials
+        alpha (float): Cumulative type-1 error risk limit
+        risk_budget_shape_parameter (float, optional): Shape of the risk budget. Defaults to 0.0.
+        use_p_norm (bool, optional): Whether to use p_norm or partial zeta function. Defaults to False (i.e., partial zeta function).
+        mirrored (bool, optional): Whether to use a mirrored policy. Defaults to True.
+        alternative (Hypothesis, optional): The alternative hypothesis under consideration. Defaults to Hypothesis.P0LessThanP1.
+
+    Raises:
+        ValueError: Could not find the policy
+        ValueError: If the policy has the wrong n_max or was not successfully synthesized.
+
+    Returns:
+        bool: Whether a ground-truth uncompressed policy was used for comparison
+        ArrayLike: The reconstruction errors against the ground truth uncompressed policy, ELSE 0.
+    """
     STEP_test = StepTest(
         alternative, n_max, alpha, risk_budget_shape_parameter, use_p_norm
     )
@@ -36,7 +56,20 @@ def visualize_step_policy(
 
     # Set up and create the directory in which to save the appropriate images.
     policy_id_str = f"n_max_{n_max}_alpha_{alpha}_shape_parameter_{risk_budget_shape_parameter}_pnorm_{use_p_norm}/"
-    media_save_path = "media/im/" + policy_id_str
+
+    check_array_base_str = (
+        f"sequentialized_barnard_tests/policies/" + policy_id_str + f"array/time_"
+    )
+    try:
+        np.load(check_array_base_str + f"{5}.npy")
+        compute_reconstruction_error_flag = True
+    except:
+        compute_reconstruction_error_flag = False
+
+    if compute_reconstruction_error_flag:
+        error_by_timestep = np.zeros(n_max + 1)
+
+    media_save_path = "media/im/policies/" + policy_id_str
 
     if not os.path.isdir(media_save_path):
         os.makedirs(media_save_path)
@@ -45,10 +78,10 @@ def visualize_step_policy(
     policy_to_visualize = copy.deepcopy(STEP_test.policy)
 
     try:
-        assert len(policy_to_visualize) == n_max
+        assert len(policy_to_visualize) == n_max + 1
     except:
         print(
-            f"Issue with policy consistency; should be length {n_max}, but is length {len(policy_to_visualize)}"
+            f"Issue with policy consistency; should be length {n_max + 1}, but is length {len(policy_to_visualize)}"
         )
         raise ValueError(
             "policy appears to be of incorrect length. Please verify the synthesis procedure."
@@ -66,7 +99,7 @@ def visualize_step_policy(
 
         policy_array = np.zeros((t + 1, t + 1))
         if t >= 1:
-            decision_array_t = policy_to_visualize[t - 1]
+            decision_array_t = policy_to_visualize[t]
         else:
             decision_array_t = [0]
 
@@ -115,6 +148,10 @@ def visualize_step_policy(
                             prob_stop = decision_array[y_absolute - critical_zero_y]
                             policy_array[y_absolute, x_absolute] = -prob_stop
 
+        if t >= 1 and compute_reconstruction_error_flag:
+            check_policy_array = np.load(check_array_base_str + f"{t}.npy")
+            error_by_timestep[t] = np.mean(np.abs(policy_array - check_policy_array))
+
         # Save off policy array as an image
         ax2.cla()
         # plt.cla()
@@ -137,7 +174,10 @@ def visualize_step_policy(
         ax2.grid(True)
         fig2.savefig(media_save_path + f"{t:03d}.png", dpi=450)
 
-    return 1
+    if compute_reconstruction_error_flag:
+        return True, error_by_timestep
+    else:
+        return False, 0
 
 
 if __name__ == "__main__":
@@ -198,6 +238,47 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    exit_status = visualize_step_policy(
-        args.n_max, args.alpha, args.log_p_norm, args.use_p_norm
+    policy_id_str = f"n_max_{args.n_max}_alpha_{args.alpha}_shape_parameter_{args.log_p_norm}_pnorm_{args.use_p_norm}/"
+    full_load_str = f"sequentialized_barnard_tests/policies/" + policy_id_str
+    media_save_path = "media/im/policies/" + policy_id_str
+    scripts_save_path = "scripts/im/policies/" + policy_id_str
+
+    if not os.path.isdir(media_save_path):
+        os.makedirs(media_save_path)
+
+    if not os.path.isdir(scripts_save_path):
+        os.makedirs(scripts_save_path)
+
+    risk_accumulation = np.load(full_load_str + f"risk_accumulation.npy")
+    points_array = np.load(full_load_str + f"points_array.npy")
+
+    fig, ax = plt.subplots()
+    for i in range(args.n_max + 1):
+        if i % 10 == 0:
+            ax.plot(points_array, risk_accumulation[i, :])
+    ax.set_xlabel("Null Hypothesis (p, p)")
+    ax.set_ylabel("Accumulated Risk")
+    ax.set_title("Risk Accumulation at 10-step Intervals")
+
+    fig.savefig(scripts_save_path + "risk_accumulation.png")
+
+    compute_error, mean_error_at_each_timestep = visualize_step_policy(
+        args.n_max,
+        args.alpha,
+        args.log_p_norm,
+        args.use_p_norm,
     )
+
+    if compute_error:
+        fig, ax = plt.subplots()
+        ax.plot(mean_error_at_each_timestep)
+
+        fig.savefig(scripts_save_path + "error_in_reconstruction.png")
+
+        print(
+            "Error (mu, sigma): (",
+            np.mean(mean_error_at_each_timestep),
+            ", ",
+            np.std(mean_error_at_each_timestep),
+            ")",
+        )
