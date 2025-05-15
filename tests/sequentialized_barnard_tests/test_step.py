@@ -19,7 +19,7 @@ paper_data_path = str(
     ).resolve()
 )
 eval_clean_up_spill = np.load(
-    f"{paper_data_path}/TRI_CLEAN_SPILL_v2.npy"
+    f"{paper_data_path}/TRI_CLEAN_SPILL_v4.npy"
 )  # Must be flipped for standard form
 eval_fold_red_towel = np.load(
     f"{paper_data_path}/TRI_FOLD_RED_TOWEL.npy"
@@ -94,21 +94,21 @@ def test_step(step, sequence_0, sequence_1, expected):
     ("step", "sequence_0", "sequence_1", "expected"),
     [
         # fmt: off
-        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 23),
+        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 9),
         (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 50),
         (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 50),
-        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 23),
-        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 21.5),
+        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 9),
+        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 21),
         (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 50),
         (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 50),
-        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 21.5),
+        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 21),
         # fmt: on
     ],
     indirect=["step"],
 )
 def test_step_time(step, sequence_0, sequence_1, expected):
     result = step.run_on_sequence(sequence_0, sequence_1)
-    assert np.abs(float(result.info["Time"]) - expected) <= 1.2
+    assert np.abs(float(result.info["Time"]) - expected) <= 0.6
 
 
 @pytest.fixture(scope="module")
@@ -126,14 +126,14 @@ def step500(request):
     ("step500", "sequence_0", "sequence_1", "expected"),
     [
         # fmt: off
-        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 25.5),
+        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 13),
         (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 50),
         (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 50),
-        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 25.5),
-        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 23.5),
+        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 13),
+        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 23),
         (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 50),
         (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 50),
-        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 23.5),
+        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 23),
         # fmt: on
     ],
     indirect=["step500"],
@@ -182,20 +182,52 @@ def test_mirrored_step(mirrored_step, sequence_0, sequence_1, expected):
     ("mirrored_step", "sequence_0", "sequence_1", "expected"),
     [
         # fmt: off
-        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 23.5),
-        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 23.5),
-        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 23.5),
-        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 23.5),
-        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 21.5),
-        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 21.5),
-        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 21.5),
-        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 21.5),
+        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 9),
+        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 9),
+        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 9),
+        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 9),
+        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 21),
+        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 21),
+        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 21),
+        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 21),
         # fmt: on
     ],
     indirect=["mirrored_step"],
 )
 def test_mirrored_step_time(mirrored_step, sequence_0, sequence_1, expected):
     result = mirrored_step.run_on_sequence(sequence_0, sequence_1)
+    assert np.abs(result.info["Time"] - expected) <= 0.6
+
+
+@pytest.fixture(scope="module")
+def mirrored_step50(request):
+    test = MirroredStepTest(
+        alternative=request.param,
+        n_max=50,
+        alpha=0.05,
+    )
+
+    return test
+
+
+@pytest.mark.parametrize(
+    ("mirrored_step50", "sequence_0", "sequence_1", "expected"),
+    [
+        # fmt: off
+        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 8),
+        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 8),
+        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 8),
+        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 8),
+        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 19),
+        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 19),
+        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 19),
+        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 19),
+        # fmt: on
+    ],
+    indirect=["mirrored_step50"],
+)
+def test_mirrored_step50_time(mirrored_step50, sequence_0, sequence_1, expected):
+    result = mirrored_step50.run_on_sequence(sequence_0, sequence_1)
     assert np.abs(result.info["Time"] - expected) <= 0.6
 
 
@@ -214,30 +246,56 @@ def mirrored_step500(request):
     ("mirrored_step500", "sequence_0", "sequence_1", "expected"),
     [
         # fmt: off
-        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 25.5),
-        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 25.5),
-        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 25.5),
-        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 25.5),
-        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 23.5),
-        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 23.5),
-        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 23.5),
-        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 23.5),
-        (Hypothesis.P0LessThanP1, eval_sim_spoon_on_towel[:, 1], eval_sim_spoon_on_towel[:, 0], 32.5),
-        (Hypothesis.P0MoreThanP1, eval_sim_spoon_on_towel[:, 1], eval_sim_spoon_on_towel[:, 0], 32.5),
-        (Hypothesis.P0LessThanP1, eval_sim_spoon_on_towel[:, 0], eval_sim_spoon_on_towel[:, 1], 32.5),
-        (Hypothesis.P0MoreThanP1, eval_sim_spoon_on_towel[:, 0], eval_sim_spoon_on_towel[:, 1], 32.5),
-        (Hypothesis.P0LessThanP1, eval_sim_eggplant_in_basket[:, 1], eval_sim_eggplant_in_basket[:, 0], 119.5),
-        (Hypothesis.P0MoreThanP1, eval_sim_eggplant_in_basket[:, 1], eval_sim_eggplant_in_basket[:, 0], 119.5),
-        (Hypothesis.P0LessThanP1, eval_sim_eggplant_in_basket[:, 0], eval_sim_eggplant_in_basket[:, 1], 119.5),
-        (Hypothesis.P0MoreThanP1, eval_sim_eggplant_in_basket[:, 0], eval_sim_eggplant_in_basket[:, 1], 119.5),
-        (Hypothesis.P0LessThanP1, eval_sim_stack_cube[:, 1], eval_sim_stack_cube[:, 0], 172.5),
-        (Hypothesis.P0MoreThanP1, eval_sim_stack_cube[:, 1], eval_sim_stack_cube[:, 0], 172.5),
-        (Hypothesis.P0LessThanP1, eval_sim_stack_cube[:, 0], eval_sim_stack_cube[:, 1], 172.5),
-        (Hypothesis.P0MoreThanP1, eval_sim_stack_cube[:, 0], eval_sim_stack_cube[:, 1], 172.5),
+        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 13),
+        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 1], eval_clean_up_spill[:, 0], 13),
+        (Hypothesis.P0LessThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 13),
+        (Hypothesis.P0MoreThanP1, eval_clean_up_spill[:, 0], eval_clean_up_spill[:, 1], 13),
+        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 23),
+        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 0], eval_fold_red_towel[:, 1], 23),
+        (Hypothesis.P0LessThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 23),
+        (Hypothesis.P0MoreThanP1, eval_fold_red_towel[:, 1], eval_fold_red_towel[:, 0], 23),
         # fmt: on
     ],
     indirect=["mirrored_step500"],
 )
 def test_mirrored_step500_time(mirrored_step500, sequence_0, sequence_1, expected):
     result = mirrored_step500.run_on_sequence(sequence_0, sequence_1)
+    assert np.abs(result.info["Time"] - expected) <= 0.6
+
+
+@pytest.fixture(scope="module")
+def mirrored_step500_simulator(request):
+    test = MirroredStepTest(
+        alternative=request.param,
+        n_max=500,
+        alpha=0.01,
+    )
+
+    return test
+
+
+@pytest.mark.parametrize(
+    ("mirrored_step500_simulator", "sequence_0", "sequence_1", "expected"),
+    [
+        # fmt: off
+        (Hypothesis.P0LessThanP1, eval_sim_spoon_on_towel[:, 1], eval_sim_spoon_on_towel[:, 0], 36),
+        (Hypothesis.P0MoreThanP1, eval_sim_spoon_on_towel[:, 1], eval_sim_spoon_on_towel[:, 0], 36),
+        (Hypothesis.P0LessThanP1, eval_sim_spoon_on_towel[:, 0], eval_sim_spoon_on_towel[:, 1], 36),
+        (Hypothesis.P0MoreThanP1, eval_sim_spoon_on_towel[:, 0], eval_sim_spoon_on_towel[:, 1], 36),
+        (Hypothesis.P0LessThanP1, eval_sim_eggplant_in_basket[:, 1], eval_sim_eggplant_in_basket[:, 0], 131),
+        (Hypothesis.P0MoreThanP1, eval_sim_eggplant_in_basket[:, 1], eval_sim_eggplant_in_basket[:, 0], 131),
+        (Hypothesis.P0LessThanP1, eval_sim_eggplant_in_basket[:, 0], eval_sim_eggplant_in_basket[:, 1], 131),
+        (Hypothesis.P0MoreThanP1, eval_sim_eggplant_in_basket[:, 0], eval_sim_eggplant_in_basket[:, 1], 131),
+        (Hypothesis.P0LessThanP1, eval_sim_stack_cube[:, 1], eval_sim_stack_cube[:, 0], 225),
+        (Hypothesis.P0MoreThanP1, eval_sim_stack_cube[:, 1], eval_sim_stack_cube[:, 0], 225),
+        (Hypothesis.P0LessThanP1, eval_sim_stack_cube[:, 0], eval_sim_stack_cube[:, 1], 225),
+        (Hypothesis.P0MoreThanP1, eval_sim_stack_cube[:, 0], eval_sim_stack_cube[:, 1], 225),
+        # fmt: on
+    ],
+    indirect=["mirrored_step500_simulator"],
+)
+def test_mirrored_step500_time(
+    mirrored_step500_simulator, sequence_0, sequence_1, expected
+):
+    result = mirrored_step500_simulator.run_on_sequence(sequence_0, sequence_1)
     assert np.abs(result.info["Time"] - expected) <= 0.6

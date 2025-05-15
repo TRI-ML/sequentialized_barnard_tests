@@ -1,14 +1,10 @@
 """Script to print out all (most) paper results from camera-ready version.
 """
 
-import copy
 import os
 from pathlib import Path
 
 import numpy as np
-from matplotlib import pyplot as plt
-from numpy.typing import ArrayLike
-from tqdm import tqdm
 
 from sequentialized_barnard_tests import (
     Hypothesis,
@@ -60,23 +56,27 @@ if __name__ == "__main__":
         alternative=Hypothesis.P0LessThanP1, n_max=50, alpha=0.05
     )
     lai_hardware_50.calibrate_c()
+    print("Lai-50 value of c: ", lai_hardware_50.c)
 
     lai_hardware_200 = MirroredLaiTest(
         alternative=Hypothesis.P0LessThanP1, n_max=200, alpha=0.05
     )
     lai_hardware_200.calibrate_c()
+    print("Lai-200 value of c: ", lai_hardware_200.c)
     # lai_hardware_200.set_c(0.00014741399676752065)
 
     lai_hardware_500 = MirroredLaiTest(
         alternative=Hypothesis.P0LessThanP1, n_max=500, alpha=0.05
     )
     lai_hardware_500.calibrate_c()
+    print("Lai-500 value of c: ", lai_hardware_500.c)
     # lai_hardware_500.set_c(5.349419043278717e-05)
 
     lai_simulation_500 = MirroredLaiTest(
         alternative=Hypothesis.P0LessThanP1, n_max=500, alpha=0.01
     )
     lai_simulation_500.calibrate_c()
+    print("Lai-500 SIM value of c: ", lai_simulation_500.c)
     # lai_simulation_500.set_c(1.184327928758278e-05)
 
     # Load STEP tests
