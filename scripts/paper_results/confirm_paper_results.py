@@ -59,20 +59,25 @@ if __name__ == "__main__":
     lai_hardware_50 = MirroredLaiTest(
         alternative=Hypothesis.P0LessThanP1, n_max=50, alpha=0.05
     )
+    lai_hardware_50.calibrate_c()
+
     lai_hardware_200 = MirroredLaiTest(
         alternative=Hypothesis.P0LessThanP1, n_max=200, alpha=0.05
     )
-    lai_hardware_200.set_c(0.00014741399676752065)
+    lai_hardware_200.calibrate_c()
+    # lai_hardware_200.set_c(0.00014741399676752065)
 
     lai_hardware_500 = MirroredLaiTest(
         alternative=Hypothesis.P0LessThanP1, n_max=500, alpha=0.05
     )
-    lai_hardware_500.set_c(5.349419043278717e-05)
+    lai_hardware_500.calibrate_c()
+    # lai_hardware_500.set_c(5.349419043278717e-05)
 
     lai_simulation_500 = MirroredLaiTest(
         alternative=Hypothesis.P0LessThanP1, n_max=500, alpha=0.01
     )
-    lai_simulation_500.set_c(1.184327928758278e-05)
+    lai_simulation_500.calibrate_c()
+    # lai_simulation_500.set_c(1.184327928758278e-05)
 
     # Load STEP tests
     step_random_seed = 42
