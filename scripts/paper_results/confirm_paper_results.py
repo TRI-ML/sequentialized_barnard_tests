@@ -46,6 +46,12 @@ if __name__ == "__main__":
     eval_sim_stack_cube = np.load(
         f"{paper_data_path}/TRI_SIM_STACK_CUBE.npy"
     )  # Must be flipped for standard form
+    eval_distribution_carrot_on_plate_supplement = np.load(
+        f"{paper_data_path}/PU_HARDWARE_DISTRIBUTION_SUPPLEMENT.npy"
+    )  # Must be flipped for standard form
+    eval_policy_carrot_on_plate_supplement = np.load(
+        f"{paper_data_path}/PU_HARDWARE_POLICY_SUPPLEMENT.npy"
+    )  # ALREADY in standard form
 
     # Load SAVI tests
     savi_hardware = MirroredSaviTest(alternative=Hypothesis.P0LessThanP1, alpha=0.05)
@@ -112,6 +118,68 @@ if __name__ == "__main__":
     permutation_idx_simulation = np.arange(500)
 
     # Run appropriate tests on each data stream
+
+    ####################################
+    ### Result 0: Princeton Hardware ###
+    ####################################
+    carrotplate_distribution_result_lai_200 = lai_hardware_200.run_on_sequence(
+        eval_distribution_carrot_on_plate_supplement[:, 0],
+        eval_distribution_carrot_on_plate_supplement[:, 1],
+    )
+    carrotplate_distribution_result_step_200 = step_hardware_200.run_on_sequence(
+        eval_distribution_carrot_on_plate_supplement[:, 0],
+        eval_distribution_carrot_on_plate_supplement[:, 1],
+    )
+    carrotplate_distribution_result_savi = savi_hardware.run_on_sequence(
+        eval_distribution_carrot_on_plate_supplement[:, 0],
+        eval_distribution_carrot_on_plate_supplement[:, 1],
+    )
+
+    carrotplate_policy_result_lai_200 = lai_hardware_200.run_on_sequence(
+        eval_policy_carrot_on_plate_supplement[:, 0],
+        eval_policy_carrot_on_plate_supplement[:, 1],
+    )
+    carrotplate_policy_result_step_200 = step_hardware_200.run_on_sequence(
+        eval_policy_carrot_on_plate_supplement[:, 0],
+        eval_policy_carrot_on_plate_supplement[:, 1],
+    )
+    carrotplate_policy_result_savi = savi_hardware.run_on_sequence(
+        eval_policy_carrot_on_plate_supplement[:, 0],
+        eval_policy_carrot_on_plate_supplement[:, 1],
+    )
+
+    print()
+    print("CARROT ON PLATE (Distribution Shift): ")
+    print()
+    print(
+        "Lai-200  time-to-decision: ",
+        carrotplate_distribution_result_lai_200.info["Time"],
+    )
+    print(
+        "STEP-200 time-to-decision: ",
+        carrotplate_distribution_result_step_200.info["Time"],
+    )
+    print(
+        "SAVI     time-to-decision: ",
+        carrotplate_distribution_result_savi.info["result_for_alternative"].info[
+            "Time"
+        ],
+    )
+    print()
+    print("CARROT ON PLATE (Policy Shift): ")
+    print()
+    print(
+        "Lai-200  time-to-decision: ",
+        carrotplate_policy_result_lai_200.info["Time"],
+    )
+    print(
+        "STEP-200 time-to-decision: ",
+        carrotplate_policy_result_step_200.info["Time"],
+    )
+    print(
+        "SAVI     time-to-decision: ",
+        carrotplate_policy_result_savi.info["result_for_alternative"].info["Time"],
+    )
 
     ##############################
     ### Result 1: FoldRedTowel ###
