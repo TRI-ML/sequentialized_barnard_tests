@@ -225,68 +225,11 @@ def synthesize_risk_budget(
     return diff_mass_removal_array, cumulative_mass_removal_array
 
 
-def quadratic_score(N, lambda_value, major_axis_length, reverse=False):
-    """Scoring function to assign the order in which states are considered for rejection. This
-    can significantly reduce the size of the linear programs, accelerating policy synthesis.
-
-    Args:
-        N (int): Current time step. Number of states is (N+1) ** 2
-        lambda_value (float): First shape parameter which determines the quadratic score ordering
-        major_axis_length (float): Second shape parameter which determines the quadratic score ordering
-        reverse (bool, optional): Toggle the assignment of the null and alternative hypotheses. If False, then alternative is p1 > p0; else alternative is p1 < p0. Defaults to False.
-
-    Returns:
-        STATES_SORTED (ArrayLike): States (two-tuples) sorted according to quadratic score distance.
-        IDX_SORTED (ArrayLike): Indices of associated states under reshape procedure.
-    """
-    IDX = np.zeros((N + 1, N + 1, 2))
-    for i in range(N + 1):
-        for j in range(N + 1):
-            IDX[i, j, 0] = i
-            IDX[i, j, 1] = j
-
-    STATES = np.copy(IDX) / N
-
-    IDX = IDX.reshape(-1, 2)
-    STATES = STATES.reshape(-1, 2)
-
-    minor_axis_length = lambda_value / np.sqrt(N)
-    # major_axis_length = minor_axis_length*major_minor_ratio
-
-    SCORES = np.zeros((STATES.shape[0],))
-
-    for k in range(STATES.shape[0]):
-        x1 = STATES[k, 0] - 0.5
-        y1 = STATES[k, 1] - 0.5
-        xp1 = (1.0 / np.sqrt(2.0)) * (x1 + y1)
-        yp1 = (1.0 / np.sqrt(2.0)) * (y1 - x1)
-
-        SCORES[k] = (xp1 / major_axis_length) ** 2 + (yp1 / minor_axis_length) ** 2
-        if reverse:
-            if yp1 >= 0.0:
-                SCORES[k] = 0.0
-        else:
-            if yp1 <= 0.0:
-                SCORES[k] = 0.0
-        # if yp1 == 0:
-        #     SCORES[k] = 1e-4*(np.abs(xp1) + 1e-4)
-        # elif yp1 < 0:
-        #     SCORES[k] = 0.
-
-    idx_scores = np.argsort(SCORES)[::-1]
-    STATES_SORTED = STATES[idx_scores, :]
-    IDX_SORTED = IDX[idx_scores, :]
-
-    return STATES_SORTED, IDX_SORTED
-
-
 def run_single_state_assignment(
     t: int,
     base_accumulated_risk: ArrayLike,
     critical_risk_target: float,
-    lambda_value: float,
-    major_axis_length: float,
-    n_points: int,
+    points_array: ArrayLike,
     STATE_DIST_POST: ArrayLike,
 ):
     """Assign states using quadratic score sorted states, accounting for symmetry in the desired policies.
@@ -295,9 +238,7 @@ def run_single_state_assignment(
         t (int): Current time step.
         base_accumulated_risk (ArrayLike): Accumulated risk for each control point up to the previous time step
         critical_risk_target (float): Current target accumulated risk for each control point
-        lambda_value (float): First shape parameter which determines the quadratic score ordering
-        major_axis_length (float): Second shape parameter which determines the quadratic score ordering
-        n_points (int): Number of control points to effect Type-1 Error control
+        points_array (ArrayLike): Set of null control points. Shape (n_points, )
         STATE_DIST_POST (ArrayLike): Current mass distribution, to decide sufficient added states for good numerical performance.
 
     Returns:
@@ -305,77 +246,44 @@ def run_single_state_assignment(
         CANDIDATE_STATE_ENCODING (ArrayLike): Encoding of non-zero-mass candidate rejection states
         CARRY_OVER_STATE_ENCODING (ArrayLike): Encoding of zero-mass (free) rejection states.
     """
-    _, I = quadratic_score(t, lambda_value, major_axis_length)
-    nI = I.shape[0]
 
     CANDIDATE_STATE_ENCODING = np.zeros((t + 1, t + 1))
     CARRY_OVER_STATE_ENCODING = np.zeros((t + 1, t + 1))
 
+    n_points = points_array.shape[0]
+
     current_accumulated_risk = copy.deepcopy(np.zeros(n_points) + base_accumulated_risk)
 
-    counter = 0
+    width = np.ones(1)
+
     # Iterate until every null hypothesis has exceeded its risk limit (to promote well-posedness of the optimization)
-    while (
-        counter == 0 or (np.min(current_accumulated_risk) <= critical_risk_target)
-    ) and counter < nI:
-        idx0 = int(I[counter, 0])
-        idx1 = int(I[counter, 1])
-        if idx1 > idx0:
-            if np.max(STATE_DIST_POST[idx0, idx1, :]) > 0.0:
-                CANDIDATE_STATE_ENCODING[idx0, idx1] = 1.0
-                current_accumulated_risk += STATE_DIST_POST[idx0, idx1, :]
-            else:
-                CARRY_OVER_STATE_ENCODING[idx0, idx1] = 1.0
-
-        counter += 1
-
-    # Continue adding additional states up to three additional semi-diagonals
-    critical_delta = idx1 - idx0
-    for k in range(counter, counter + 1 + 3 * (t - critical_delta)):
-        if k < nI:
-            idx0 = int(I[k, 0])
-            idx1 = int(I[k, 1])
-            if idx1 > idx0:
+    for k in range(t):
+        delta = t - k
+        for i in range(t + 1 - delta):
+            if width[i] >= 0.5:
+                idx0 = i
+                idx1 = i + delta
                 if np.max(STATE_DIST_POST[idx0, idx1, :]) > 0.0:
                     CANDIDATE_STATE_ENCODING[idx0, idx1] = 1.0
                     current_accumulated_risk += STATE_DIST_POST[idx0, idx1, :]
                 else:
                     CARRY_OVER_STATE_ENCODING[idx0, idx1] = 1.0
 
-    # Enforce symmetry in CANDIDATE_STATE_ENCODING and CARRY_OVER_STATE_ENCODING
-    if not np.all(
-        np.isclose(
-            CANDIDATE_STATE_ENCODING,
-            np.transpose(np.flip(CANDIDATE_STATE_ENCODING)),
-        )
-    ):
-        CANDIDATE_STATE_ENCODING = np.maximum(
-            CANDIDATE_STATE_ENCODING,
-            np.transpose(np.flip(CANDIDATE_STATE_ENCODING)),
-        )
-        assert np.all(
-            np.isclose(
-                CANDIDATE_STATE_ENCODING,
-                np.transpose(np.flip(CANDIDATE_STATE_ENCODING)),
-            )
-        )
-
-    if not np.all(
-        np.isclose(
-            CARRY_OVER_STATE_ENCODING,
-            np.transpose(np.flip(CARRY_OVER_STATE_ENCODING)),
-        )
-    ):
-        CARRY_OVER_STATE_ENCODING = np.maximum(
-            CARRY_OVER_STATE_ENCODING,
-            np.transpose(np.flip(CARRY_OVER_STATE_ENCODING)),
-        )
-        assert np.all(
-            np.isclose(
-                CARRY_OVER_STATE_ENCODING,
-                np.transpose(np.flip(CARRY_OVER_STATE_ENCODING)),
-            )
-        )
+        # Figure out width for the next run-through
+        tmp = np.sort(
+            np.argwhere(current_accumulated_risk >= critical_risk_target + 1e-5)
+        )  # Add margin to ensure good numerical properties for the optimization
+        width = np.ones(k + 2)
+        if len(tmp) == 0:
+            pass
+        else:
+            p_min = points_array[tmp[0][0]]
+            p_max = points_array[tmp[-1][0]]
+            frac_denom = float(k + 2)
+            for i in range(1, k + 1):
+                tmp_frac = float(i) / frac_denom
+                if tmp_frac > p_min and tmp_frac < p_max:
+                    width[i] = 0.0
 
     return current_accumulated_risk, CANDIDATE_STATE_ENCODING, CARRY_OVER_STATE_ENCODING
 

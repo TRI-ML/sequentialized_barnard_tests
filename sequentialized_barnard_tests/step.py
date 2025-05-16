@@ -128,35 +128,34 @@ class StepTest(SequentialTestBase):
                     f"datum_0 == {datum_0} and datum_1 == {datum_1}."
                 )
             )
+        if self.policy is None:
+            # warnings.warn(f"{self.policy_path}")
+            self.load_existing_policy()
+            if self._t >= 1:
+                warnings.warn(
+                    "No policy assigned, so will default to Fail to Decide. Ensure "
+                    "that a policy is successfully loaded before stepping through "
+                    "the data!"
+                )
+            if self.policy is None:
+                info = {"Time": self._t, "State": self._state}
+                result = TestResult(self._current_decision, info)
+
+                return result
+
+        # Iterate time state
+        self._t += 1
 
         # Handle case in which we have exceeded n_max
         if self._t > self.n_max:
             warnings.warn(
                 "Have exceeded the allowed number of evals; not updating internal states."
             )
-            self._t += 1
 
             info = {"Time": self._t, "State": self._state}
             result = TestResult(self._current_decision, info)
 
             return result
-
-        # Iterate time state
-        self._t += 1
-
-        if self.policy is None:
-            # warnings.warn(f"{self.policy_path}")
-            self.load_existing_policy()
-            # warnings.warn(
-            #     "No policy assigned, so will default to Fail to Decide. Ensure "
-            #     "that a policy is successfully loaded before stepping through "
-            #     "the data!"
-            # )
-            if self.policy is None:
-                info = {"Time": self._t, "State": self._state}
-                result = TestResult(self._current_decision, info)
-
-                return result
 
         # Update the state to incorporate new data.
         # NOTE: the state is the running SUM, not the running mean!
@@ -177,7 +176,7 @@ class StepTest(SequentialTestBase):
             # Therefore, look only to REJECT in standard setting
 
             # Extract relevant component of policy
-            decision_array = self.policy[self._t][x_absolute]
+            decision_array = self.policy[int(self._t)][x_absolute]
 
             # Number of non-zero / non-unity policy bins at this x and t
             L = decision_array.shape[0] - 1
@@ -186,7 +185,7 @@ class StepTest(SequentialTestBase):
             critical_zero_y = int(decision_array[0])
 
             if y_absolute <= critical_zero_y:  # Current state cannot be significant
-                info = {"Time": self._t + 1, "State": self._state}
+                info = {"Time": self._t, "State": self._state}
                 result = TestResult(self._current_decision, info)
 
                 return result
@@ -198,7 +197,7 @@ class StepTest(SequentialTestBase):
                     self._current_decision = Decision.AcceptAlternative
                 else:
                     self._current_decision = Decision.FailToDecide
-                info = {"Time": self._t + 1, "State": self._state}
+                info = {"Time": self._t, "State": self._state}
                 result = TestResult(self._current_decision, info)
 
                 return result
@@ -216,10 +215,10 @@ class StepTest(SequentialTestBase):
                         self._current_decision = Decision.AcceptAlternative
                     else:
                         self._current_decision = Decision.FailToDecide
-                    info = {"Time": self._t + 1, "State": self._state}
+                    info = {"Time": self._t, "State": self._state}
                     result = TestResult(self._current_decision, info)
                 else:  # Then we have probabilistically continued
-                    info = {"Time": self._t + 1, "State": self._state}
+                    info = {"Time": self._t, "State": self._state}
                     result = TestResult(self._current_decision, info)
 
                 return result
@@ -232,7 +231,7 @@ class StepTest(SequentialTestBase):
             # Therefore, look only to REJECT in reverse setting
 
             # Extract relevant component of policy
-            decision_array = self.policy[self._t][x_absolute]
+            decision_array = self.policy[int(self._t)][x_absolute]
 
             # Number of non-zero / non-unity policy bins at this x and t
             L = decision_array.shape[0] - 1
@@ -241,7 +240,7 @@ class StepTest(SequentialTestBase):
             critical_zero_y = int(decision_array[0])
 
             if y_absolute <= critical_zero_y:  # Current state cannot be significant
-                info = {"Time": self._t + 1, "State": self._state}
+                info = {"Time": self._t, "State": self._state}
                 result = TestResult(self._current_decision, info)
 
                 return result
@@ -253,7 +252,7 @@ class StepTest(SequentialTestBase):
                     self._current_decision = Decision.AcceptAlternative
                 else:
                     self._current_decision = Decision.FailToDecide
-                info = {"Time": self._t + 1, "State": self._state}
+                info = {"Time": self._t, "State": self._state}
                 result = TestResult(self._current_decision, info)
 
                 return result
@@ -280,7 +279,7 @@ class StepTest(SequentialTestBase):
                 return result
         else:
             # Cannot reject because delta is exactly 0; can only continue!
-            info = {"Time": self._t + 1, "State": self._state}
+            info = {"Time": self._t, "State": self._state}
             result = TestResult(self._current_decision, info)
 
             return result
@@ -296,7 +295,7 @@ class StepTest(SequentialTestBase):
             verbose (bool, optional): If True, print the outputs to stdout.
                 Defaults to False.
         """
-        self._state = np.zeros(2).astype(int)
+        self._state = np.zeros(2)
         self._t = int(0)
         self._current_decision = Decision.FailToDecide
 
@@ -434,33 +433,34 @@ class MirroredStepTest(StepTest):
                     f"datum_0 == {datum_0} and datum_1 == {datum_1}."
                 )
             )
+        if self.policy is None:
+            self.load_existing_policy()
+            if self._t >= 1:
+                warnings.warn(
+                    "No policy assigned, so will default to Fail to Decide. Ensure "
+                    "that a policy is successfully loaded before stepping through "
+                    "the data!"
+                )
+
+            if self.policy is None:
+                info = {"Time": self._t, "State": self._state}
+                result = TestResult(self._current_decision, info)
+
+                return result
+
+        # Iterate time state
+        self._t += 1
 
         # Handle case in which we have exceeded n_max
         if self._t > self.n_max:
             warnings.warn(
                 "Have exceeded the allowed number of evals; not updating internal states."
             )
-            self._t += 1
+
             info = {"Time": self._t, "State": self._state}
             result = TestResult(self._current_decision, info)
 
             return result
-
-        # Iterate time state
-        self._t += 1
-
-        if self.policy is None:
-            # warnings.warn(
-            #     "No policy assigned, so will default to Fail to Decide. Ensure "
-            #     "that a policy is successfully loaded before stepping through "
-            #     "the data!"
-            # )
-            self.load_existing_policy()
-            if self.policy is None:
-                info = {"Time": self._t, "State": self._state}
-                result = TestResult(self._current_decision, info)
-
-                return result
 
         # Update the state to incorporate new data.
         # NOTE: the state is the running SUM, not the running mean!
@@ -481,8 +481,14 @@ class MirroredStepTest(StepTest):
             # Therefore, look only to REJECT in standard setting
 
             # Extract relevant component of policy
-            decision_array = self.policy[self._t][x_absolute]
+            try:
+                decision_array = self.policy[int(self._t)][x_absolute]
+            except:
+                print("Time: ", self._t)
+                info = {"Time": self._t, "State": self._state}
+                result = TestResult(self._current_decision, info)
 
+                return result
             # Number of non-zero / non-unity policy bins at this x and t
             L = decision_array.shape[0] - 1
 
@@ -490,7 +496,7 @@ class MirroredStepTest(StepTest):
             critical_zero_y = int(decision_array[0])
 
             if y_absolute <= critical_zero_y:  # Current state cannot be significant
-                info = {"Time": self._t + 1, "State": self._state}
+                info = {"Time": self._t, "State": self._state}
                 result = TestResult(self._current_decision, info)
 
                 return result
@@ -502,7 +508,7 @@ class MirroredStepTest(StepTest):
                     self._current_decision = Decision.AcceptAlternative
                 else:
                     self._current_decision = Decision.AcceptNull
-                info = {"Time": self._t + 1, "State": self._state}
+                info = {"Time": self._t, "State": self._state}
                 result = TestResult(self._current_decision, info)
 
                 return result
@@ -520,10 +526,10 @@ class MirroredStepTest(StepTest):
                         self._current_decision = Decision.AcceptAlternative
                     else:
                         self._current_decision = Decision.AcceptNull
-                    info = {"Time": self._t + 1, "State": self._state}
+                    info = {"Time": self._t, "State": self._state}
                     result = TestResult(self._current_decision, info)
                 else:  # Then we have probabilistically continued
-                    info = {"Time": self._t + 1, "State": self._state}
+                    info = {"Time": self._t, "State": self._state}
                     result = TestResult(self._current_decision, info)
 
                 return result
@@ -536,7 +542,7 @@ class MirroredStepTest(StepTest):
             # Therefore, look only to REJECT in reverse setting
 
             # Extract relevant component of policy
-            decision_array = self.policy[self._t][x_absolute]
+            decision_array = self.policy[int(self._t)][x_absolute]
 
             # Number of non-zero / non-unity policy bins at this x and t
             L = decision_array.shape[0] - 1
@@ -545,7 +551,7 @@ class MirroredStepTest(StepTest):
             critical_zero_y = int(decision_array[0])
 
             if y_absolute <= critical_zero_y:  # Current state cannot be significant
-                info = {"Time": self._t + 1, "State": self._state}
+                info = {"Time": self._t, "State": self._state}
                 result = TestResult(self._current_decision, info)
 
                 return result
@@ -557,7 +563,7 @@ class MirroredStepTest(StepTest):
                     self._current_decision = Decision.AcceptAlternative
                 else:
                     self._current_decision = Decision.AcceptNull
-                info = {"Time": self._t + 1, "State": self._state}
+                info = {"Time": self._t, "State": self._state}
                 result = TestResult(self._current_decision, info)
 
                 return result
@@ -584,7 +590,7 @@ class MirroredStepTest(StepTest):
                 return result
         else:
             # Cannot reject because delta is exactly 0; can only continue!
-            info = {"Time": self._t + 1, "State": self._state}
+            info = {"Time": self._t, "State": self._state}
             result = TestResult(self._current_decision, info)
 
             return result
