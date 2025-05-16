@@ -149,7 +149,7 @@ if __name__ == "__main__":
     )
 
     print()
-    print("CARROT ON PLATE (Distribution Shift): ")
+    print("CARROT ON PLATE Supplement E (Distribution Shift): ")
     print()
     print(
         "Lai-200  time-to-decision: ",
