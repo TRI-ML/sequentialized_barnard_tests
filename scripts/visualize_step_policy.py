@@ -57,8 +57,15 @@ def visualize_step_policy(
     # Set up and create the directory in which to save the appropriate images.
     policy_id_str = f"n_max_{n_max}_alpha_{alpha}_shape_parameter_{risk_budget_shape_parameter}_pnorm_{use_p_norm}/"
 
-    check_array_base_str = (
-        f"sequentialized_barnard_tests/policies/" + policy_id_str + f"array/time_"
+    base_dir = os.path.normpath(
+        os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+        )
+    )
+    check_array_base_str = os.path.join(
+        base_dir,
+        f"sequentialized_barnard_tests/policies/" + policy_id_str + f"array/time_",
     )
     try:
         np.load(check_array_base_str + f"{5}.npy")
@@ -69,7 +76,7 @@ def visualize_step_policy(
     if compute_reconstruction_error_flag:
         error_by_timestep = np.zeros(n_max + 1)
 
-    media_save_path = "media/im/policies/" + policy_id_str
+    media_save_path = os.path.join(base_dir, "media/im/policies/", policy_id_str)
 
     if not os.path.isdir(media_save_path):
         os.makedirs(media_save_path)
@@ -90,7 +97,7 @@ def visualize_step_policy(
     fig2, ax2 = plt.subplots(figsize=(10, 10))
 
     # Iterate through loop to generate policy_array and associated images
-    for t in tqdm(range(n_max + 1)):
+    for t in tqdm(range(n_max + 1), desc="STEP Policy Visualization"):
         try:
             del policy_array
             del decision_array_t
@@ -237,11 +244,18 @@ if __name__ == "__main__":
     # TODO: add mirrored, alternative
 
     args = parser.parse_args()
-
+    base_dir = os.path.normpath(
+        os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "..",
+        )
+    )
     policy_id_str = f"n_max_{args.n_max}_alpha_{args.alpha}_shape_parameter_{args.log_p_norm}_pnorm_{args.use_p_norm}/"
-    full_load_str = f"sequentialized_barnard_tests/policies/" + policy_id_str
-    media_save_path = "media/im/policies/" + policy_id_str
-    scripts_save_path = "scripts/im/policies/" + policy_id_str
+    full_load_str = os.path.join(
+        base_dir, f"sequentialized_barnard_tests/policies/", policy_id_str
+    )
+    media_save_path = os.path.join(base_dir, "media/im/policies/", policy_id_str)
+    scripts_save_path = os.path.join(base_dir, "scripts/im/policies/", policy_id_str)
 
     if not os.path.isdir(media_save_path):
         os.makedirs(media_save_path)

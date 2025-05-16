@@ -17,6 +17,7 @@ import argparse
 import copy
 import os
 import pickle
+from typing import Optional
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -43,10 +44,10 @@ def run_step_policy_synthesis(
     major_axis_length: float,
     risk_budget_shape_parameter: float = 0.0,
     use_p_norm: bool = False,
-    custom_differential_risk_budget: ArrayLike = None,
-    dead_time: int = None,
+    custom_differential_risk_budget: Optional[ArrayLike] = None,
+    dead_time: Optional[int] = None,
     save_policy_array: bool = False,
-    save_policy_path: str = None,
+    save_policy_path: Optional[str] = None,
     verbose: bool = False,
 ):
     """Procedure to synthesize a near-optimal finite-sample test for the policy comparison problem (assuming p1 > p0 is the alternative). This is the foundation for the
@@ -68,9 +69,10 @@ def run_step_policy_synthesis(
 
     Raises:
         ValueError: If invalid required arguments
+        ValueError: If inconsistent specification of whether to save the uncompressed policy
         ValueError: If invalid specified dead_time
-        ValueError: If cumulative mass removal arrays do not terminate near alpha (making the procedure either loose, if below alpha, or invalid, if above alpha)
-        ValueError: If control points are not assigned with proper extremal (min and max) limits
+        RuntimeError: If cumulative mass removal arrays do not terminate near alpha (making the procedure either loose, if below alpha, or invalid, if above alpha)
+        RuntimeError: If control points are not assigned with proper extremal (min and max) limits
 
     Returns:
         POLICY_LIST_COMPRESSED (ArrayLike): The compressed representation of the accept/reject comparison policy.
@@ -125,7 +127,7 @@ def run_step_policy_synthesis(
         assert np.isclose(alpha, cumulative_mass_removal_array[-1])
         assert np.isclose(alpha, np.sum(diff_mass_removal_array))
     except:
-        raise ValueError(
+        raise RuntimeError(
             "Inconsistent cumulative and differential mass removal arrays; will lead to unpredictable optimization behavior!"
         )
 
@@ -133,7 +135,6 @@ def run_step_policy_synthesis(
     # HANDLE Kernels, storage matrices, and encoding matrices
     # HANDLE capacity to compress the policy as we go
     ##########
-    # # TODO: more principled setup than the empirical shape parameters for quadratic_score
     # # Compute extremal 0 < p_min, p_max < 1 that contain risk of positive delta
     # p_max = np.exp(np.log(1.0 - alpha - 1e-5) / n_max)
     # p_min = 1.0 - p_max
@@ -152,7 +153,7 @@ def run_step_policy_synthesis(
         assert np.isclose(POINTS_ARRAY[-1], p_max)
         assert np.isclose(POINTS_ARRAY[0], p_min)
     except:
-        raise ValueError(
+        raise RuntimeError(
             "Error in assigning control points of worst-case null hypotheses; extremal values do not match [p_min, p_max]"
         )
 
@@ -186,7 +187,7 @@ def run_step_policy_synthesis(
     )
     POLICY_LIST_COMPRESSED.append(policy_array_compressed)
     # Begin loop to synthesize the optimal policy
-    for t in tqdm(range(1, n_max + 1)):
+    for t in tqdm(range(1, n_max + 1), desc="STEP Policy Synthesis"):
         # Don't propagate zeros -- waste of time and effort
         critical_limit = int(np.minimum(n_max + 1, t + 1))
 
@@ -521,9 +522,9 @@ if __name__ == "__main__":
         lambda_value = args.lambda_value
         major_axis_length = args.major_axis_length
 
-    base_path = os.getcwd()
+    base_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
     results_path = f"sequentialized_barnard_tests/policies/n_max_{args.n_max}_alpha_{args.alpha}_shape_parameter_{args.log_p_norm}_pnorm_{args.use_p_norm}/"
-    full_save_path = os.path.join(base_path, results_path)
+    full_save_path = os.path.normpath(os.path.join(base_path, results_path))
     if not os.path.isdir(full_save_path):
         os.makedirs(full_save_path)
 
@@ -548,8 +549,10 @@ if __name__ == "__main__":
         save_policy_path=special_policy_array_save_path,
     )
 
-    with open(full_save_path + "policy_compressed.pkl", "wb") as filename:
+    with open(full_save_path + "/" + "policy_compressed.pkl", "wb") as filename:
         pickle.dump(POLICY_LIST_COMPRESSED, filename)
 
-    np.save(full_save_path + f"risk_accumulation.npy", RISK_ACCUMULATION)
-    np.save(full_save_path + f"points_array.npy", POINTS_ARRAY)
+    np.save(full_save_path + "/" + f"risk_accumulation.npy", RISK_ACCUMULATION)
+    np.save(full_save_path + "/" + f"points_array.npy", POINTS_ARRAY)
+
+    print(f"STEP policy saved at {full_save_path}.")
