@@ -166,7 +166,7 @@ if __name__ == "__main__":
         ],
     )
     print()
-    print("CARROT ON PLATE (Policy Shift): ")
+    print("CARROT ON PLATE Supplement E (Policy Shift): ")
     print()
     print(
         "Lai-200  time-to-decision: ",
