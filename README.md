@@ -6,13 +6,13 @@ This codebase will be developed into a standalone pip package, with planned rele
 
 Current features:
 - Fully automated STEP policy synthesis
-- Baseline sequential method implementations of (SAVI)[https://www.sciencedirect.com/science/article/pii/S0167715223000597?via%3Dihub] and (Lai)[https://projecteuclid.org/journals/annals-of-statistics/volume-16/issue-2/Nearly-Optimal-Sequential-Tests-of-Composite-Hypotheses/10.1214/aos/1176350840.full]
+- Baseline sequential method implementations of [SAVI](https://www.sciencedirect.com/science/article/pii/S0167715223000597?via%3Dihub) and [Lai](https://projecteuclid.org/journals/annals-of-statistics/volume-16/issue-2/Nearly-Optimal-Sequential-Tests-of-Composite-Hypotheses/10.1214/aos/1176350840.full)
 - Validation tools
     - STEP policy visualization
     - Verification of Type-1 Error control
 - Unit tests
     - Method functionality
-    - Recreate results from our (paper)[https://www.arxiv.org/abs/2503.10966]
+    - Recreate results from our [paper](https://www.arxiv.org/abs/2503.10966)
 
 Features in development:
 - Demonstration scripts for each stage of the STEP evaluation pipeline
