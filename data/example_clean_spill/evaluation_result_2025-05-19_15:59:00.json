@@ -1,0 +1,1 @@
+{"result": [{"Hypothesis": "P0 < P1", "Decision": "P0 >= P1", "Time": 9}], "method": "STEP", "params": [{"n_max": 200, "alpha": 0.05}], "p0_hat": 0.8, "p1_hat": 0.28, "N": 50}
