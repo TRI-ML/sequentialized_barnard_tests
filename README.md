@@ -74,9 +74,10 @@ $$\text{Accumulated Budget}(n) = (\frac{n}{n_{max}})^{\exp{\lambda}}$$
 **For zeta function**\
 $$\text{Input: } \lambda \in \mathbb{R}$$
 $$\text{Accumulated Budget}(n) = \frac{\alpha}{Z(n_{max})} \cdot \sum_{i=1}^n (\frac{1}{i})^{\lambda}$$
+$$Z(n_{max}) = \sum_{i=1}^{n_{max}} (\frac{1}{i})^{\lambda}$$
 
 ### (1A) Arbitrary Risk Budgets
-Generalizing the accepted risk budgets to arbitrary monotonic sequences $`\{0, \epsilon_1 > 0, \epsilon_2 > \epsilon_1, ..., \alpha\}`$ is in the development pipeline, but is *not handled at present in the code*.
+Generalizing the accepted risk budgets to arbitrary monotonic sequences $`\{0, \epsilon_1 > 0, \epsilon_2 > \epsilon_1, ..., \epsilon_{n_{max}} = \alpha\}`$ is in the development pipeline, but is **not handled at present in the code**.
 
 ### (2) Running STEP Policy Synthesis
 Having decided an appropriate form for the risk budget shape, policy synthesis is straightforward to run. From the base directory, the general command would be:
@@ -85,7 +86,7 @@ Having decided an appropriate form for the risk budget shape, policy synthesis i
 $ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {shape_parameter} -up {use_p_norm_shape_family}
 ```
 
-Often, the user may not have a clear idea as to which shape family they would prefer. In that case, we recommend the easiest option of using a uniform risk budget, which corresponds to a parameter of 0 for both shape families. This can be run with the explicit arguments or with the implicit defaults; thus, the following commands are EQUIVALENT:
+Often, the user may not have a clear idea as to which shape family they would prefer. In that case, we recommend the easiest option of using a uniform risk budget, which corresponds to a parameter of 0 for both shape families. This can be run with the explicit arguments or with the implicit defaults. Thus, the following commands are equivalent:
 
 ```bash
 $ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha}
@@ -96,6 +97,8 @@ $ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0}
 ```bash
 $ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0} -up {False}
 ```
+
+NOTE: For $\lambda \neq 0$, the shape families **do not agree** and are therefore **not generally interchangeable**.
 
 ### (2A) Disclaimers
 Running the policy synthesis will save a durable policy to the user's local machine. This policy can be reused for all future settings requiring the same \{n_max, alpha\} combination. For n_max < 500, the amount of required memory is < 5Mb. The policy is saved under:
@@ -126,7 +129,7 @@ $ python evaluation/run_step_on_evaluation_data.py -p "{new_project_dir}" -f "{m
 
 This will print the evaluation result to the terminal, as well as save key information in a timestamped json file.
 
-To illustrate this via an evaluation on the default data. The following commands are EQUIVALENT:
+We illustrate this via an evaluation on the default data. The following commands are equivalent:
 ```bash
 $ python evaluation/run_step_on_evaluation_data.py -p "example_clean_spill" -f "TRI_CLEAN_SPILL_v4.npy"
 ```
