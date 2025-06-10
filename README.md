@@ -67,16 +67,16 @@ $ quick_start/
 ### (1) Understanding the Accepted Shape Parameters
 In order to synthesize a STEP Policy for specific values of n_max and alpha, one additional set of parametric decisions will be required. The user will need to set the risk budget shape, which is specified by choice of function family (p-norm and zeta-function) and particular shape parameter. The shape parameter is real-valued; used directly for zeta functions and exponentiated for p-norms.
 
-** For p-norms **\
-$$ \text{Input: } \lambda \in \mathbb{R} $$
-$$ \text{Accumulated Budget}(n) = (\frac{n}{n_{max}})^{\exp{\lambda}} $$
+**For p-norms**\
+$$\text{Input: } \lambda \in \mathbb{R}$$
+$$\text{Accumulated Budget}(n) = (\frac{n}{n_{max}})^{\exp{\lambda}}$$
 
-** For zeta function **\
-$$ \text{Input: } \lambda \in \mathbb{R} $$
-$$ \text{Accumulated Budget}(n) = \frac{\alpha}{Z(n_{max})} \cdot \sum_{i=1}^n (\frac{1}{i})^{\lambda} $$
+**For zeta function**\
+$$\text{Input: } \lambda \in \mathbb{R}$$
+$$\text{Accumulated Budget}(n) = \frac{\alpha}{Z(n_{max})} \cdot \sum_{i=1}^n (\frac{1}{i})^{\lambda}$$
 
 ### (1A) Arbitrary Risk Budgets
-Generalizing the accepted risk budgets to arbitrary monotonic sequences $ \{0, \epsilon_1 > 0, \epsilon_2 > \epsilon_1, ..., \epsilon_{n_{max}} = \alpha\}$ is in the development pipeline, but is *not handled at present in the code*.
+Generalizing the accepted risk budgets to arbitrary monotonic sequences $`\{0, \epsilon_1 > 0, \epsilon_2 > \epsilon_1, ..., \alpha\}`$ is in the development pipeline, but is *not handled at present in the code*.
 
 ### (2) Running STEP Policy Synthesis
 Having decided an appropriate form for the risk budget shape, policy synthesis is straightforward to run. From the base directory, the general command would be:
