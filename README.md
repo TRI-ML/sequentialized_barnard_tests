@@ -69,12 +69,14 @@ In order to synthesize a STEP Policy for specific values of n_max and alpha, one
 
 **For p-norms**\
 $$\text{Input: } \lambda \in \mathbb{R}$$\
-$$\text{Accumulated Budget}(n) = (\frac{n}{n_{max}})^{\exp{\lambda}}$$\
+$$\text{Accumulated Risk Budget}(n) = \alpha \cdot (\frac{n}{n_{max}})^{\exp{\lambda}}$$
 
 **For zeta function**\
 $$\text{Input: } \lambda \in \mathbb{R}$$\
-$$\text{Accumulated Budget}(n) = \frac{\alpha}{Z(n_{max})} \cdot \sum_{i=1}^n (\frac{1}{i})^{\lambda}$$\
-$$Z(n_{max}) = \sum_{i=1}^{n_{max}} (\frac{1}{i})^{\lambda}$$\
+$$\text{Accumulated Risk Budget}(n) = \frac{\alpha}{Z(n_{max})} \cdot \sum_{i=1}^n (\frac{1}{i})^{\lambda}$$\
+$$Z(n_{max}) = \sum_{i=1}^{n_{max}} (\frac{1}{i})^{\lambda}$$
+
+The user may confirm that in each case, evaluating the accumulated risk budget at $`n=n_{max}`$ returns precisely $\alpha$.
 
 ### (1A) Arbitrary Risk Budgets
 Generalizing the accepted risk budgets to arbitrary monotonic sequences $`\{0, \epsilon_1 > 0, \epsilon_2 > \epsilon_1, ..., \epsilon_{n_{max}} = \alpha\}`$ is in the development pipeline, but is **not handled at present in the code**.
