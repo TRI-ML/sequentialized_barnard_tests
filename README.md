@@ -1,6 +1,7 @@
 # sequentialized_barnard_tests
 A collection of sequential statistical hypothesis testing methods for two-by-two contingency tables.
 
+[[Paper](https://www.arxiv.org/abs/2503.10966)]&nbsp;&nbsp;[[Website](https://tri-ml.github.io/step/)]
 <!-- ## Development Plan
 This codebase will be developed into a standalone pip package, with planned release date June 2025.
 
