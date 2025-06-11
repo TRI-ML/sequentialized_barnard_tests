@@ -54,12 +54,12 @@ We assume that any specified virtual / conda environment has been activated for 
 ### (1A) Understanding the Accepted Shape Parameters
 In order to synthesize a STEP Policy for specific values of n_max and alpha, one additional set of parametric decisions will be required. The user will need to set the risk budget shape, which is specified by choice of function family (p-norm vs zeta-function) and particular shape parameter. The shape parameter is real-valued; it is used directly for zeta functions and is exponentiated for p-norms.
 
-**For p-norms**\
+**For p-norms**
 - $$\text{Shape Parameter: } \lambda \in \mathbb{R}$$
 - $$\text{Accumulated Risk Budget}(n) = \alpha \cdot (\frac{n}{n_{max}})^{\exp{(\lambda)}}$$
 
-**For zeta function**\
-- $$\text{Input: } \lambda \in \mathbb{R}$$
+**For zeta function**
+- $$\text{Shape Parameter: } \lambda \in \mathbb{R}$$
 - $$\text{Accumulated Risk Budget}(n) = \frac{\alpha}{Z(n_{max})} \cdot \sum_{i=1}^n (\frac{1}{i})^{\lambda}$$
 - $$Z(n_{max}) = \sum_{i=1}^{n_{max}} (\frac{1}{i})^{\lambda}$$
 
