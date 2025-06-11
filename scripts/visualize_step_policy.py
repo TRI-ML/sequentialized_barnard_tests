@@ -233,7 +233,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-up",
         "--use_p_norm",
-        type=bool,
+        type=str,
         default=False,
         help=(
             "Toggle whether to use p_norm or zeta function shape family for the risk budget. "
@@ -244,6 +244,13 @@ if __name__ == "__main__":
     # TODO: add mirrored, alternative
 
     args = parser.parse_args()
+    if args.use_p_norm[0] == "F" or args.use_p_norm[0] == "f":
+        args.use_p_norm = False
+    elif args.use_p_norm[0] == "T" or args.use_p_norm[0] == "t":
+        args.use_p_norm = True
+    else:
+        raise ValueError("Invalid input for use_p_norm; must begin with 'T' or 'F'")
+
     base_dir = os.path.normpath(
         os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
