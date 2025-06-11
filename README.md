@@ -98,7 +98,7 @@ $ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0.
 $ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0.0} -up {False}
 ```
 
-Note: For \{shape_parameter\} $`\neq 0`$, the shape families differ the choice of \{use_p_norm\} *will affect the STEP policy*.
+Note: For \{shape_parameter\} $`\neq 0`$, the shape families differ. Therefore, the choice of \{use_p_norm\} *will affect the STEP policy*.
 
 ### (2C) Disclaimers
 - Running the policy synthesis will save a durable policy to the user's local machine. This policy can be reused for all future settings requiring the same \{n_max, alpha\} combination. For \{n_max\} $`< 500`$, the amount of required memory is < 5Mb. The policy is saved under:
