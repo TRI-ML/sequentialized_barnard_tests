@@ -47,7 +47,10 @@ $ pre-commit install
 We assume that any specified virtual / conda environment has been activated for all subsequent code snippets.
 
 # Quick Start Guides
-We include key notes for understanding the core ideas of the STEP code. For additional illustration, see the resources in the notebooks folder.
+We include key notes for understanding the core ideas of the STEP code. Quick-start resources are included under:
+```bash
+$ quick_start/
+```
 
 ## Quick Start Guide: Making a STEP Policy for Specific \{n_max, alpha\}
 
@@ -92,10 +95,10 @@ We recommend using the default linear risk budget, which is the shape *used in t
 $ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha}
 ```
 ```bash
-$ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0.0} -up {True}
+$ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0.0} -up "True"
 ```
 ```bash
-$ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0.0} -up {False}
+$ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0.0} -up "False"
 ```
 
 Note: For \{shape_parameter\} $`\neq 0`$, the shape families differ. Therefore, the choice of \{use_p_norm\} *will affect the STEP policy*.
@@ -128,14 +131,14 @@ $ cp some/path/to/TRI_CLEAN_SPILL_v4.npy data/example_clean_spill/TRI_CLEAN_SPIL
 ### (2) Running the Evaluation
 Then, the user need simply run the evaluation script, which requires the project directory and file in addition to the policy synthesis arguments:
 ```bash
-$ python evaluation/run_step_on_evaluation_data.py -p "{new_project_dir}" -f "{my_data_file.npy}" -n {n_max} -a {alpha} -pz {shape_parameter} -up {use_p_norm}
+$ python evaluation/run_step_on_evaluation_data.py -p "{new_project_dir}" -f "{my_data_file.npy}" -n {n_max} -a {alpha} -pz {shape_parameter} -up "{use_p_norm}"
 ```
 
 This will print the evaluation result to the terminal, as well as save key information in a timestamped json file.
 
 We illustrate this via an evaluation on the default data:
 ```bash
-$ python evaluation/run_step_on_evaluation_data.py -p "example_clean_spill" -f "TRI_CLEAN_SPILL_v4.npy" -n {200} -a {0.05} -pz {0.0} -up {False}
+$ python evaluation/run_step_on_evaluation_data.py -p "example_clean_spill" -f "TRI_CLEAN_SPILL_v4.npy" -n {200} -a {0.05} -pz {0.0} -up "False"
 ```
 
 # Code Overview
@@ -157,9 +160,4 @@ $ evaluation/
 and the associated evaluation data is stored in:
 ```bash
 $ data/
-```
-
-Quick-start scripts are included under:
-```bash
-$ quick_start/
 ```
