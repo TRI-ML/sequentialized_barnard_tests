@@ -159,3 +159,14 @@ and the associated evaluation data is stored in:
 ```bash
 $ data/
 ```
+
+# Citation
+
+```
+@inproceedings{snyder2025step,
+title = {Is Your Imitation Learning Policy Better Than Mine? Policy Comparison with Near-Optimal Stopping},
+author = {Snyder, David and Hancock, Asher James and Badithela, Apurva and Dixon, Emma and Miller, Patrick and Ambrus, Rares Andrei and Majumdar, Anirudha and Itkina, Masha and Nishimura, Haruki},
+booktitle={Proceedings of the Robotics: Science and Systems Conference (RSS)},
+year = {2025},
+}
+```
