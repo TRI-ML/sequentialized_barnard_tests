@@ -68,8 +68,10 @@ The user may confirm that in each case, evaluating the accumulated risk budget a
 
 ### (1B) Shape Parameters in Code
 In the codebase, the value of $\lambda$ is set in the \{shape_parameter\} variable. This variable is real-valued.\
-The family shape is set by the \{use_p_norm\} variable. This variable is Boolean. If it is True, then p-norm family is used. Otherwise, the zeta-function family is used.
-
+\
+The family shape is set by the \{use_p_norm\} variable. This variable is Boolean.\
+- If it is True, then p-norm family is used.
+- If it is False, the zeta-function family is used.
 
 
 ### (1C) Arbitrary Risk Budgets
