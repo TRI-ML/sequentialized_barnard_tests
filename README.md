@@ -47,9 +47,9 @@ $ pre-commit install
 We assume that any specified virtual / conda environment has been activated for all subsequent code snippets.
 
 # Quick Start Guides
+We include key notes for understanding the core ideas of the STEP code. For additional illustration, see the resources in the notebooks folder.
 
 ## Quick Start Guide: Making a STEP Policy for Specific \{n_max, alpha\}
-
 
 ### (1A) Understanding the Accepted Shape Parameters
 In order to synthesize a STEP Policy for specific values of n_max and alpha, one additional set of parametric decisions will be required. The user will need to set the risk budget shape, which is specified by choice of function family (p-norm vs zeta-function) and particular shape parameter. The shape parameter is real-valued; it is used directly for zeta functions and is exponentiated for p-norms.
@@ -77,14 +77,16 @@ The family shape is set by the \{use_p_norm\} variable. This variable is Boolean
 ### (1C) Arbitrary Risk Budgets
 Generalizing the accepted risk budgets to arbitrary monotonic sequences $`\{0, \epsilon_1 > 0, \epsilon_2 > \epsilon_1, ..., \epsilon_{n_{max}} = \alpha\}`$ is in the development pipeline, but is **not handled at present in the code**.
 
-### (2) Running STEP Policy Synthesis
+
+### (2A) Running STEP Policy Synthesis
 Having decided an appropriate form for the risk budget shape, policy synthesis is straightforward to run. From the base directory, the general command would be:
 
 ```bash
-$ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {shape_parameter} -up {use_p_norm_shape_family}
+$ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {shape_parameter} -up {use_p_norm}
 ```
 
-Often, the user may not have a clear idea as to which shape family they would prefer. In that case, we recommend the easiest option of using a uniform risk budget, which corresponds to a parameter of 0 for both shape families. This can be run with the explicit arguments or with the implicit defaults. Thus, the following commands are equivalent:
+### (2B) What If I Don't Know the Right Risk Budget?
+We recommend using the default linear risk budget, which is the shape *used in the paper*. This corresponds to \{shape_parameter\}$= 0.0$ for each shape family. Thus, *each of the following commands constructs the same policy*:
 
 ```bash
 $ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha}
@@ -96,15 +98,15 @@ $ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0}
 $ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0} -up {False}
 ```
 
-NOTE: For $\lambda \neq 0$, the shape families **do not agree** and are therefore **not generally interchangeable**.
+Note: For \{shape_parameter\} $\neq 0$, the shape families differ the choice of \{use_p_norm\} *will affect the STEP policy*.
 
-### (2A) Disclaimers
-Running the policy synthesis will save a durable policy to the user's local machine. This policy can be reused for all future settings requiring the same \{n_max, alpha\} combination. For n_max < 500, the amount of required memory is < 5Mb. The policy is saved under:
+### (2C) Disclaimers
+- Running the policy synthesis will save a durable policy to the user's local machine. This policy can be reused for all future settings requiring the same \{n_max, alpha\} combination. For \{n_max\} $< 500$, the amount of required memory is < 5Mb. The policy is saved under:
 ```bash
 $ sequentialized_barnard_tests/policies/
 ```
 
-At present, we have not tested extensively beyond n_max=500. Going beyond this limit may lead to issues, and the likelihood will grow the larger n_max is set to be. The code will also require increasing amounts of RAM as n_max is increased.
+- At present, we have not tested extensively beyond \{n_max\}$=500$. Going beyond this limit may lead to issues, and the likelihood will grow the larger n_max is set to be. The code will also require increasing amounts of RAM as n_max is increased.
 
 ## Quick Start Guide: Evaluation on Real Data
 
