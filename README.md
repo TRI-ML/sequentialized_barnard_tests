@@ -1,7 +1,7 @@
 # sequentialized_barnard_tests
 A collection of sequential statistical hypothesis testing methods for two-by-two contingency tables.
 
-## Development Plan
+<!-- ## Development Plan
 This codebase will be developed into a standalone pip package, with planned release date June 2025.
 
 Current features:
@@ -19,10 +19,20 @@ Features in development:
 - Approximately optimal risk budget estimation tool based on evaluator priors on $$(p_0, p_1)$$
 - Fundamental limit estimator for guiding evaluation effort
     - Determine if a particular effect size is plausibly discoverable given the evaluation budget
-- Baseline implementation of a sequential Barnard procedure which controls Type-1 error
+- Baseline implementation of a sequential Barnard procedure which controls Type-1 error -->
 
-## Installation Instructions
-An example of the environment setup is shown below.
+## Installation Instructions \[Standard\]
+The basic environmental setup is shown below. A virtual / conda environment may be constructed; however, the requirements are quite lightweight and this is probably not needed.
+```bash
+$ cd <some_directory>
+$ git clone git@github.com:TRI-ML/sequentialized_barnard_tests.git
+$ cd sequentialized_barnard_tests
+$ pip install -r requirements.txt
+$ pip install -e .
+```
+
+## Installation Instructions \[Dev\]
+For potential contributors and developers, we recommend a virtualenv:
 ```bash
 $ cd <some_directory>
 $ git clone git@github.com:TRI-ML/sequentialized_barnard_tests.git
@@ -34,42 +44,19 @@ $ pip install -e .
 $ pre-commit install
 ```
 
-# Code Overview and Quick Start Guides
+We assume that any specified virtual / conda environment has been activated for all subsequent code snippets.
 
-## Overview
-Scripts to generate and visualize STEP policies are included under:
-```bash
-$ scripts/
-```
-
-Any resulting visualizations are stored in:
-```bash
-$ media/
-```
-
-The evaluation environment for real data is included in:
-```bash
-$ evaluation/
-```
-
-and the associated evaluation data is stored in:
-```bash
-$ data/
-```
-
-Quick-start scripts are included under:
-```bash
-$ quick_start/
-```
+# Quick Start Guides
 
 ## Quick Start Guide: Making a STEP Policy for Specific \{n_max, alpha\}
 
-### (1) Understanding the Accepted Shape Parameters
-In order to synthesize a STEP Policy for specific values of n_max and alpha, one additional set of parametric decisions will be required. The user will need to set the risk budget shape, which is specified by choice of function family (p-norm and zeta-function) and particular shape parameter. The shape parameter is real-valued; used directly for zeta functions and exponentiated for p-norms.
+
+### (1A) Understanding the Accepted Shape Parameters
+In order to synthesize a STEP Policy for specific values of n_max and alpha, one additional set of parametric decisions will be required. The user will need to set the risk budget shape, which is specified by choice of function family (p-norm vs zeta-function) and particular shape parameter. The shape parameter is real-valued; it is used directly for zeta functions and is exponentiated for p-norms.
 
 **For p-norms**\
-$$\text{Input: } \lambda \in \mathbb{R}$$\
-$$\text{Accumulated Risk Budget}(n) = \alpha \cdot (\frac{n}{n_{max}})^{\exp{\lambda}}$$
+$$\text{Shape Parameter: } \lambda \in \mathbb{R}$$\
+$$\text{Accumulated Risk Budget}(n) = \alpha \cdot (\frac{n}{n_{max}})^{\exp{(\lambda)}}$$
 
 **For zeta function**\
 $$\text{Input: } \lambda \in \mathbb{R}$$\
@@ -78,7 +65,14 @@ $$Z(n_{max}) = \sum_{i=1}^{n_{max}} (\frac{1}{i})^{\lambda}$$
 
 The user may confirm that in each case, evaluating the accumulated risk budget at $`n=n_{max}`$ returns precisely $\alpha$.
 
-### (1A) Arbitrary Risk Budgets
+
+### (1B) Shape Parameters in Code
+In the codebase, the value of $\lambda$ is set in the \{shape_parameter\} variable. This variable is real-valued.\
+The family shape is set by the \{use_p_norm\} variable. This variable is Boolean. If it is True, then p-norm family is used. Otherwise, the zeta-function family is used.
+
+
+
+### (1C) Arbitrary Risk Budgets
 Generalizing the accepted risk budgets to arbitrary monotonic sequences $`\{0, \epsilon_1 > 0, \epsilon_2 > \epsilon_1, ..., \epsilon_{n_{max}} = \alpha\}`$ is in the development pipeline, but is **not handled at present in the code**.
 
 ### (2) Running STEP Policy Synthesis
@@ -137,4 +131,30 @@ $ python evaluation/run_step_on_evaluation_data.py -p "example_clean_spill" -f "
 ```
 ```bash
 $ python evaluation/run_step_on_evaluation_data.py -p "example_clean_spill" -f "TRI_CLEAN_SPILL_v4.npy" -n {200} -a {0.05} -pz {0.0} -up {False}
+```
+
+# Code Overview
+Scripts to generate and visualize STEP policies are included under:
+```bash
+$ scripts/
+```
+
+Any resulting visualizations are stored in:
+```bash
+$ media/
+```
+
+The evaluation environment for real data is included in:
+```bash
+$ evaluation/
+```
+
+and the associated evaluation data is stored in:
+```bash
+$ data/
+```
+
+Quick-start scripts are included under:
+```bash
+$ quick_start/
 ```
