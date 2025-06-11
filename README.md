@@ -47,10 +47,7 @@ $ pre-commit install
 We assume that any specified virtual / conda environment has been activated for all subsequent code snippets.
 
 # Quick Start Guides
-We include key notes for understanding the core ideas of the STEP code. Quick-start resources are included under:
-```bash
-$ quick_start/
-```
+We include key notes for understanding the core ideas of the STEP code. Quick-start resources are included in both shell script and notebook form.
 
 ## Quick Start Guide: Making a STEP Policy for Specific \{n_max, alpha\}
 
