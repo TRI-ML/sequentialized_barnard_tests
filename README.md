@@ -92,10 +92,10 @@ We recommend using the default linear risk budget, which is the shape *used in t
 $ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha}
 ```
 ```bash
-$ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0} -up {True}
+$ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0.0} -up {True}
 ```
 ```bash
-$ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0} -up {False}
+$ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {0.0} -up {False}
 ```
 
 Note: For \{shape_parameter\} $`\neq 0`$, the shape families differ the choice of \{use_p_norm\} *will affect the STEP policy*.
@@ -106,7 +106,7 @@ Note: For \{shape_parameter\} $`\neq 0`$, the shape families differ the choice o
 $ sequentialized_barnard_tests/policies/
 ```
 
-- At present, we have not tested extensively beyond \{n_max\}$=500$. Going beyond this limit may lead to issues, and the likelihood will grow the larger n_max is set to be. The code will also require increasing amounts of RAM as n_max is increased.
+- At present, we have not tested extensively beyond \{n_max\}$`=500`$. Going beyond this limit may lead to issues, and the likelihood will grow the larger \{n_max\} is set to be. The code will also require increasing amounts of RAM as \{n_max\} is increased.
 
 ## Quick Start Guide: Evaluation on Real Data
 
@@ -119,20 +119,21 @@ $ mkdir data/{new_project_dir}
 $ cp path/to/{my_data_file.npy} data/{new_project_dir}/{my_data_file.npy}
 ```
 
-See the example structure for an illustration of the desired format.
+We give an example that *would have generated* the included data:
+```bash
+$ mkdir data/example_clean_spill
+$ cp some/path/to/TRI_CLEAN_SPILL_v4.npy data/example_clean_spill/TRI_CLEAN_SPILL_v4.npy
+```
 
 ### (2) Running the Evaluation
-Then, the user need simply run the evaluation script, which sets the project directory and file and then carries through the policy synthesis arguments:
+Then, the user need simply run the evaluation script, which requires the project directory and file in addition to the policy synthesis arguments:
 ```bash
-$ python evaluation/run_step_on_evaluation_data.py -p "{new_project_dir}" -f "{my_data_file.npy}" -n {n_max} -a {alpha} -pz {shape_parameter} -up {use_p_norm_shape_family}
+$ python evaluation/run_step_on_evaluation_data.py -p "{new_project_dir}" -f "{my_data_file.npy}" -n {n_max} -a {alpha} -pz {shape_parameter} -up {use_p_norm}
 ```
 
 This will print the evaluation result to the terminal, as well as save key information in a timestamped json file.
 
-We illustrate this via an evaluation on the default data. The following commands are equivalent:
-```bash
-$ python evaluation/run_step_on_evaluation_data.py -p "example_clean_spill" -f "TRI_CLEAN_SPILL_v4.npy"
-```
+We illustrate this via an evaluation on the default data:
 ```bash
 $ python evaluation/run_step_on_evaluation_data.py -p "example_clean_spill" -f "TRI_CLEAN_SPILL_v4.npy" -n {200} -a {0.05} -pz {0.0} -up {False}
 ```
