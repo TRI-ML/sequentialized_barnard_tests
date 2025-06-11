@@ -55,13 +55,13 @@ We assume that any specified virtual / conda environment has been activated for 
 In order to synthesize a STEP Policy for specific values of n_max and alpha, one additional set of parametric decisions will be required. The user will need to set the risk budget shape, which is specified by choice of function family (p-norm vs zeta-function) and particular shape parameter. The shape parameter is real-valued; it is used directly for zeta functions and is exponentiated for p-norms.
 
 **For p-norms**\
-$$\text{Shape Parameter: } \lambda \in \mathbb{R}$$\
-$$\text{Accumulated Risk Budget}(n) = \alpha \cdot (\frac{n}{n_{max}})^{\exp{(\lambda)}}$$
+- $$\text{Shape Parameter: } \lambda \in \mathbb{R}$$
+- $$\text{Accumulated Risk Budget}(n) = \alpha \cdot (\frac{n}{n_{max}})^{\exp{(\lambda)}}$$
 
 **For zeta function**\
-$$\text{Input: } \lambda \in \mathbb{R}$$\
-$$\text{Accumulated Risk Budget}(n) = \frac{\alpha}{Z(n_{max})} \cdot \sum_{i=1}^n (\frac{1}{i})^{\lambda}$$\
-$$Z(n_{max}) = \sum_{i=1}^{n_{max}} (\frac{1}{i})^{\lambda}$$
+- $$\text{Input: } \lambda \in \mathbb{R}$$
+- $$\text{Accumulated Risk Budget}(n) = \frac{\alpha}{Z(n_{max})} \cdot \sum_{i=1}^n (\frac{1}{i})^{\lambda}$$
+- $$Z(n_{max}) = \sum_{i=1}^{n_{max}} (\frac{1}{i})^{\lambda}$$
 
 The user may confirm that in each case, evaluating the accumulated risk budget at $`n=n_{max}`$ returns precisely $\alpha$.
 
@@ -69,7 +69,7 @@ The user may confirm that in each case, evaluating the accumulated risk budget a
 ### (1B) Shape Parameters in Code
 In the codebase, the value of $\lambda$ is set in the \{shape_parameter\} variable. This variable is real-valued.\
 \
-The family shape is set by the \{use_p_norm\} variable. This variable is Boolean.\
+The family shape is set by the \{use_p_norm\} variable. This variable is Boolean.
 - If it is True, then p-norm family is used.
 - If it is False, the zeta-function family is used.
 
