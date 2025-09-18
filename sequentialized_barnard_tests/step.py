@@ -347,10 +347,6 @@ class StepTest(SequentialTestBase):
                 f"Current policy path: {policy_path}"
                 "Unable to find policy with the assigned test parameters. An additional policy synthesis procedure may be required."
             )
-            warnings.warn(
-                f"Current policy path: {policy_path}"
-                "Unable to find policy with the assigned test parameters. An additional policy synthesis procedure may be required."
-            )
             warnings.warn("Try run the following command to generate the policy:")
             warnings.warn(f"python sequentialized_barnard_tests/scripts/synthesize_general_step_policy.py -n {self.n_max} -a {self.alpha} -pz {self.shape_parameter} -up {self.use_p_norm}")
             warnings.warn("After generating the policy, please rerun the test.")
