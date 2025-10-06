@@ -481,7 +481,7 @@ if __name__ == "__main__":
         "-up",
         "--use_p_norm",
         type=str,
-        default=False,
+        default="False",
         help=(
             "Toggle whether to use p_norm or zeta function shape family for the risk budget. "
             "If True, uses p_norm shape; else, uses zeta function shape family. "
