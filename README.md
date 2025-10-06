@@ -90,6 +90,8 @@ Having decided an appropriate form for the risk budget shape, policy synthesis i
 $ python scripts/synthesize_general_step_policy.py -n {n_max} -a {alpha} -pz {shape_parameter} -up {use_p_norm}
 ```
 
+Note: This script will be called automatically upon instantiation of a test object, if the corresponding polciy file is missing from `sequentialized_barnard_tests/policies/`.
+
 ### (2B) What If I Don't Know the Right Risk Budget?
 We recommend using the default linear risk budget, which is the shape *used in the paper*. This corresponds to \{shape_parameter\}$`= 0.0`$ for each shape family. Thus, *each of the following commands constructs the same policy*:
 
