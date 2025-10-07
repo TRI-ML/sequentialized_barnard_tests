@@ -325,7 +325,7 @@ class StepTest(SequentialTestBase):
                 Defaults to False.
         """
         # Determine the path to the synthesis script
-        script_dir = os.path.join(os.path.dirname(__file__), "..", "scripts")
+        script_dir = os.path.join(os.path.dirname(__file__), "scripts")
         synth_script = os.path.join(script_dir, "synthesize_general_step_policy.py")
 
         policy_path = os.path.join(
