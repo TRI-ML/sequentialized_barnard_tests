@@ -4,13 +4,13 @@ Policies are stored in sequentialized_barnard_tests/policies.
 
 Example Default Usage (all equivalent, using default params):
 
-    (1) python scripts/synthesize_step_policy.py
-    (2) python scripts/synthesize_step_policy.py -n 200 -a 0.05
-    (3) python scripts/synthesize_step_policy.py --n_max 200 --alpha 0.05 --n_points 129
+    (1) python sequentialized_barnard_tests/scripts/synthesize_step_policy.py
+    (2) python sequentialized_barnard_tests/scripts/synthesize_step_policy.py -n 200 -a 0.05
+    (3) python sequentialized_barnard_tests/scripts/synthesize_step_policy.py --n_max 200 --alpha 0.05 --n_points 129
 
 Example Non-Default Parameter Usage:
 
-    python scripts/synthesize_step_policy.py -n 400
+    python sequentialized_barnard_tests/scripts/synthesize_step_policy.py -n 400
 """
 
 import argparse
@@ -481,7 +481,7 @@ if __name__ == "__main__":
         "-up",
         "--use_p_norm",
         type=str,
-        default=False,
+        default="False",
         help=(
             "Toggle whether to use p_norm or zeta function shape family for the risk budget. "
             "If True, uses p_norm shape; else, uses zeta function shape family. "
@@ -530,7 +530,7 @@ if __name__ == "__main__":
         major_axis_length = args.major_axis_length
 
     base_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
-    results_path = f"sequentialized_barnard_tests/policies/n_max_{args.n_max}_alpha_{args.alpha}_shape_parameter_{args.log_p_norm}_pnorm_{args.use_p_norm}/"
+    results_path = f"policies/n_max_{args.n_max}_alpha_{args.alpha}_shape_parameter_{args.log_p_norm}_pnorm_{args.use_p_norm}/"
     full_save_path = os.path.normpath(os.path.join(base_path, results_path))
     if not os.path.isdir(full_save_path):
         os.makedirs(full_save_path)

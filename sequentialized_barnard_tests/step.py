@@ -10,8 +10,9 @@ URL: https://www.arxiv.org/abs/2503.10966
 
 import os
 import pickle
+import subprocess
+import sys
 import warnings
-from pathlib import Path
 from typing import Optional, Union
 
 import numpy as np
@@ -323,15 +324,10 @@ class StepTest(SequentialTestBase):
             verbose (bool, optional): If True, print the outputs to stdout.
                 Defaults to False.
         """
-        # print(str(Path(os.path.dirname(os.path.abspath(__file__))).resolve()))
-        # print(os.path.dirname(os.path.abspath(__file__)))
-        # print(os.path.dirname(__file__))
-        # self.policy_path = os.path.join(
-        #     str(
-        #         Path(os.path.dirname(os.path.abspath(__file__))).resolve()
-        #     ),  # os.path.dirname(os.path.abspath(__file__)),
-        #     f"policies/n_max_{self.n_max}_alpha_{self.alpha}_shape_parameter_{self.shape_parameter}_pnorm_{self.use_p_norm}/policy_compressed.pkl",
-        # )
+        # Determine the path to the synthesis script
+        script_dir = os.path.join(os.path.dirname(__file__), "scripts")
+        synth_script = os.path.join(script_dir, "synthesize_general_step_policy.py")
+
         policy_path = os.path.join(
             os.path.dirname(__file__),
             f"policies/n_max_{self.n_max}_alpha_{self.alpha}_shape_parameter_{self.shape_parameter}_pnorm_{self.use_p_norm}/",
@@ -342,11 +338,41 @@ class StepTest(SequentialTestBase):
             with open(policy_path, "rb") as filename:
                 self.policy = pickle.load(filename)
             self.need_new_policy = False
-        except:
-            warnings.warn(
-                f"Current policy path: {policy_path}"
-                "Unable to find policy with the assigned test parameters. An additional policy synthesis procedure may be required."
-            )
+        except Exception as e:
+            print(f"Policy not found at {policy_path}. Attempting synthesis...")
+            # Build command to synthesize policy
+            cmd = [
+                sys.executable,
+                synth_script,
+                "--n_max",
+                str(self.n_max),
+                "--alpha",
+                str(self.alpha),
+                "--n_points",
+                "129",  # default value, could be parameterized
+                "--lambda_value",
+                "2.1",  # default, could be parameterized
+                "--major_axis_length",
+                "1.4",  # default, could be parameterized
+                "--log_p_norm",
+                str(self.shape_parameter),
+                "--use_p_norm",
+                str(self.use_p_norm),
+            ]
+            print(f"Running synthesis command: {' '.join(cmd)}")
+            result = subprocess.run(cmd, cwd=script_dir, capture_output=False)
+            # Try loading again
+            try:
+                with open(policy_path, "rb") as filename:
+                    self.policy = pickle.load(filename)
+                self.need_new_policy = False
+                print("Policy synthesis and loading successful.")
+            except Exception as e2:
+                warnings.warn(
+                    f"Unable to synthesize or load policy at {policy_path}. Error: {e2}"
+                )
+                self.policy = None
+                self.need_new_policy = True
 
         self.policy_path = policy_path
 
