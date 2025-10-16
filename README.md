@@ -101,6 +101,8 @@ print(decision)  # AcceptNull: success rate of the first policy > success rate o
 Note: `AcceptNull` is a valid decision only for "mirrored" tests.
 In our terminology, a mirrored test is one that runs two one-sided tests
 simultaneously, with the null and the alternaive flipped from each other.
+(Because of the monotonicity of the test statistic, mirrored tests suffer no penalty for
+running two tests simultaneously, and therefore essentially dominate one-sided tests.)
 In the example above, the alternative is `Hypothesis.P0LessThanP1` and the decision is
 `Decision.AcceptNull`, which should be interpreted as accepting `Hypothesis.P0MoreThanP1`.
 If you rather want a more conventional one-sided test, you can instantiate one by calling
