@@ -126,6 +126,10 @@ decision = result.decision
 print(decision)  # FailToDecide: difference was not statistically separable; user can collect 100 - 4 = 96 more rollouts for each policy to re-run the test.
 ```
 
+### More Working Examples
+- `quick_start.ipynb` presents a single-task policy comparison example using actual hardware evaluation results.
+- `multi_policy_comparison_example.ipynb` describes how to compare multiple policies at once, both on single task and multiple tasks.
+
 ## Key Notes for Understanding the Core Ideas of STEP Code
 
 We include key notes for understanding the core ideas of the STEP code. Quick-start resources are included in both shell script and notebook form.
