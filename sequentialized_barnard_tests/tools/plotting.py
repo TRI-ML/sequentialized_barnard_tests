@@ -269,6 +269,11 @@ def plot_model_comparison(
     cld_letters: List[str],
     rng: np.random.Generator,
     output_path: Optional[str] = None,
+    title: Optional[str] = None,
+    add_legend: bool = False,
+    unit_width: int = 6,
+    height: int = 4,
+    dpi: int = 100,
 ) -> Union[None, plt.Figure]:
     """Makes a violin plot of success rate estimates with corresponding CLD letters
     for policy comparison.
@@ -279,7 +284,12 @@ def plot_model_comparison(
         cld_letters: A list of CLD letters corresponding to each model.
         rng: A numpy random Generator instance for posterior sampling.
         output_path: Optional file path to save the plot. If None, the plot will not
-            be saved but returned as a matplotlib Figure object.
+            be saved but returned as a matplotlib Figure object. Defaults to None.
+        title: Optional title for the plot. Defaults to None.
+        add_legend: Whether to show legend on the plot. Defaults to False.
+        unit_width: Figure width per model. Defaults to 6.
+        height: Figure height. Defaults to 4.
+        dpi: Resolution of the saved plot. Defaults to 100.
 
     Returns:
         If output_path is None, returns a matplotlib Figure object containing
@@ -293,9 +303,9 @@ def plot_model_comparison(
     for success_array in success_arrays:
         samples = draw_samples_from_beta_posterior(success_array, rng)
         posterior_samples.append(samples)
-        means.append(np.mean(posterior_samples))
+        means.append(np.mean(samples))
 
-    fig, ax = plt.subplots(figsize=(max(6, num_models), 6))
+    fig, ax = plt.subplots(figsize=(max(unit_width, num_models), height), dpi=dpi)
 
     cmap = get_cmap("tab10")
     colors = [cmap(i % 10) for i in range(num_models)]
@@ -328,11 +338,13 @@ def plot_model_comparison(
         )
 
     ax.set_xticks(np.arange(num_models))
-    ax.set_xticklabels(model_name_list, rotation=45, ha="right")
+    ax.set_xticklabels(model_name_list, rotation=0, ha="center")
     ax.set_ylim(0.0, 1.0)
     ax.set_ylabel("Success Rate")
-    ax.set_title("Estimated Success Rates with CLD Letters")
-    ax.legend(parts["bodies"], model_name_list, loc="best")
+    if title is not None:
+        ax.set_title(title)
+    if add_legend:
+        ax.legend(parts["bodies"], model_name_list, loc="best")
     plt.tight_layout()
 
     if output_path is not None:
