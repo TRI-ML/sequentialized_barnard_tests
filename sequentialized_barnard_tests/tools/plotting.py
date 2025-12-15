@@ -106,7 +106,8 @@ def compare_success_and_get_cld(
     rng: Optional[np.random.Generator] = None,
     verbose: bool = True,
 ) -> Dict[str, str]:
-    """Compares multiple success arrays and returns
+    """Compares multiple success arrays and returns their Compact Letter Display (CLD)
+    representation based on pairwise tests with STEP.
 
     Args:
         model_name_list: A list of model names.
