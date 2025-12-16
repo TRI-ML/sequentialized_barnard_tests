@@ -2,6 +2,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 from matplotlib.cm import get_cmap
 import matplotlib.pyplot as plt
+import warnings
 import numpy as np
 from scipy import stats
 
@@ -235,6 +236,124 @@ def compare_success_and_get_cld(
     return return_dict
 
 
+def compare_progress_and_get_cld(
+    model_name_list: List[str],  # [model_0, ...]
+    progress_array_list: List[np.ndarray],  # [progress_array_for_model_0, ...]
+    global_confidence_level: float,
+    verbose: bool = True,
+):
+    """Compares multiple success arrays and returns their Compact Letter Display (CLD)
+    representation based on pairwise tests with Welch's t-test.
+
+    Args:
+        model_name_list: A list of model names.
+        progress_array_list: A list of numpy arrays indicating partial task progress
+            for each model.
+        global_confidence_level: The desired global confidence level for the
+            multiple comparisons.
+        verbose: Whether to print detailed output. Defaults to True.
+    Returns:
+        A dictionary mapping model names to their CLD letters.
+    """
+    num_models = len(model_name_list)
+    # Set up the sequential statistical test.
+    global_alpha = 1 - global_confidence_level
+    num_comparisons = num_models * (num_models - 1) // 2
+    individual_alpha = global_alpha / num_comparisons
+    individual_confidence_level = 1 - individual_alpha
+    if verbose:
+        print("Statistical Test Specs:")
+        print("  Method: Welch's T-test")
+        print(f"  Global Confidence: {round(global_confidence_level, 5)}")
+        print(f"    ({round(individual_confidence_level, 5)} per comparison)")
+    # Prepare success array per model.
+    progress_array_dict = dict()  # model_name -> progress_array
+    for idx in np.arange(num_models):
+        model = model_name_list[idx]
+        progress_array = progress_array_list[idx]
+        progress_array_dict[model] = progress_array
+
+    # Run pairwise comparisons.
+    comparisons_dict = dict()  # (model_name_a, model_name_b) -> Decision
+    for idx_a in np.arange(num_models):
+        for idx_b in np.arange(idx_a + 1, num_models):
+            model_a = model_name_list[idx_a]
+            model_b = model_name_list[idx_b]
+            array_a = progress_array_dict[model_a]
+            array_b = progress_array_dict[model_b]
+            min_sample_size = min(len(array_a), len(array_b))
+            # Run Welch's t-test for non-binary data.
+            if min_sample_size < 50:
+                warnings.warn(
+                    f"{model_a} vs. {model_b}: Sample size {min_sample_size} "
+                    "< 50 might be too small to apply Welch's t-test."
+                )
+            _, p_value = stats.ttest_ind(array_a, array_b, equal_var=False)
+            if p_value <= individual_alpha:
+                comparisons_dict[(model_a, model_b)] = Decision.AcceptAlternative
+            else:
+                comparisons_dict[(model_a, model_b)] = Decision.FailToDecide
+
+    # Compact Letter Display algorithm to summarize results
+    input_list_to_cld = list()
+    for key, val in comparisons_dict.items():
+        if val != Decision.FailToDecide:
+            input_list_to_cld.append(key)
+    models_sorted_by_success_rates = [
+        model
+        for model, _ in sorted(
+            progress_array_dict.items(),
+            key=lambda kv_pair: (np.mean(kv_pair[1]) if len(kv_pair[1]) else 0.0),
+            reverse=True,
+        )
+    ]
+    letters_list = compact_letter_display(
+        input_list_to_cld, models_sorted_by_success_rates
+    )
+    if verbose:
+        print("Statistical Test Results (Compact Letter Display):")
+    str_padding = max([len(model) for model in models_sorted_by_success_rates])
+    return_dict = dict()
+    for letters, model in zip(letters_list, models_sorted_by_success_rates):
+        return_dict[model] = letters
+        num_trials = len(progress_array_dict[model])
+        if len(progress_array_dict[model]) == 0:
+            average_performance = 0.0
+        else:
+            average_performance = np.mean(progress_array_dict[model])
+        if verbose:
+            print(
+                f"  CLD for {model:<{str_padding}}: {letters}\n"
+                f"    Average Perf over {num_trials} trials = "
+                f"{round(average_performance, 3)}",
+            )
+
+    # Ranks are determined if each policy has a unique single letter.
+    all_order_determined = all([len(letters) == 1 for letters in letters_list]) and len(
+        set(letters_list)
+    ) == len(model_name_list)
+    if verbose:
+        if all_order_determined:
+            print(
+                (
+                    "All models separated with global confidence of "
+                    f"{round(global_confidence_level, 5)}."
+                )
+            )
+        else:
+            print(
+                (
+                    "Not all models were separated with global confidence of "
+                    f"{round(global_confidence_level, 5)}. Models that share "
+                    "a same letter are not separated from each other with "
+                    "statistical significance. For more information on how to "
+                    "interpret the letters, see: "
+                    "https://en.wikipedia.org/wiki/Compact_letter_display.\n"
+                )
+            )
+    return return_dict
+
+
 def draw_samples_from_beta_posterior(
     success_array: np.ndarray,
     rng: np.random.Generator,
@@ -264,11 +383,36 @@ def draw_samples_from_beta_posterior(
     return posterior.rvs(num_samples, random_state=rng)
 
 
+def draw_samples_from_dirichlet_posterior(
+    progress_array: np.ndarray,
+    progress_bins: np.ndarray,
+    rng: np.random.Generator,
+    num_samples: int = 10000,
+    alpha_prior: float = 1,
+):
+    progress_bins = sorted(progress_bins)
+    if not np.all([p in progress_bins for p in progress_array]):
+        raise ValueError("All progress values must be in progress_bins.")
+    # Dirichlet prior.
+    alpha_vec = alpha_prior * np.ones(len(progress_bins))
+    # Get Dirichlet posterior.
+    progress_counts = np.array([np.sum(progress_array == b) for b in progress_bins])
+    posterior = stats.dirichlet(alpha_vec + progress_counts)
+    p_samples = posterior.rvs(size=num_samples, random_state=rng)
+
+    # Convert each probability vector to its mean.
+    mean_samples = p_samples.dot(progress_bins)
+
+    return mean_samples
+
+
 def plot_model_comparison(
     model_name_list: List[str],
-    success_arrays: List[np.ndarray],
+    result_arrays: List[np.ndarray],
     cld_letters: List[str],
     rng: np.random.Generator,
+    mode: str = "success_rate",  # "success_rate" or "task_progress"
+    progress_bins: Optional[np.ndarray] = None,
     output_path: Optional[str] = None,
     title: Optional[str] = None,
     add_legend: bool = False,
@@ -281,9 +425,12 @@ def plot_model_comparison(
 
     Args:
         model_name_list: A list of model names.
-        success_arrays: A list of arrays indicating success/failure for each model.
+        result_arrays: A list of arrays indicating success/failure or progress for each model.
         cld_letters: A list of CLD letters corresponding to each model.
         rng: A numpy random Generator instance for posterior sampling.
+        mode: Mode of the result arrays. "success_rate" for binary success/failure
+            arrays, "task_progress" for progress arrays. Defaults to "success_rate".
+        progress_bins: If mode is "task_progress", the unique progress bins. Defaults to None.
         output_path: Optional file path to save the plot. If None, the plot will not
             be saved but returned as a matplotlib Figure object. Defaults to None.
         title: Optional title for the plot. Defaults to None.
@@ -296,13 +443,48 @@ def plot_model_comparison(
         If output_path is None, returns a matplotlib Figure object containing
         the plot. Otherwise, saves the plot to the specified path and returns None.
     """
+    if not mode in ["success_rate", "task_progress"]:
+        raise ValueError(f"mode must be 'success_rate' or 'task_progress', got {mode}")
+    if mode == "success_rate":
+        if not progress_bins is None:
+            raise ValueError(
+                "progress_bins should be None when mode is 'success_rate'."
+            )
+        if any(
+            not np.all(np.isin(result_array, [True, False]))
+            for result_array in result_arrays
+        ):
+            raise ValueError(
+                "All result arrays must be binary arrays of True/False "
+                "when mode is 'success_rate'."
+            )
+    if mode == "task_progress":
+        if progress_bins is None:
+            raise ValueError(
+                "progress_bins must be provided when mode is 'task_progress'."
+            )
+        if any(
+            not np.all(np.isin(result_array, progress_bins))
+            for result_array in result_arrays
+        ):
+            raise ValueError(
+                "All result arrays must contain only values in progress_bins "
+                "when mode is 'task_progress'."
+            )
     num_models = len(model_name_list)
 
     posterior_samples = []
     means = []
 
-    for success_array in success_arrays:
-        samples = draw_samples_from_beta_posterior(success_array, rng)
+    for result_array in result_arrays:
+        if mode == "success_rate":
+            samples = draw_samples_from_beta_posterior(result_array, rng)
+        elif mode == "task_progress":
+            samples = draw_samples_from_dirichlet_posterior(
+                result_array, progress_bins, rng
+            )
+        else:
+            raise ValueError(f"Unknown mode: {mode}")
         posterior_samples.append(samples)
         means.append(np.mean(samples))
 
@@ -341,7 +523,12 @@ def plot_model_comparison(
     ax.set_xticks(np.arange(num_models))
     ax.set_xticklabels(model_name_list, rotation=0, ha="center")
     ax.set_ylim(0.0, 1.0)
-    ax.set_ylabel("Success Rate")
+    if mode == "success_rate":
+        ax.set_ylabel("Success Rate")
+    elif mode == "task_progress":
+        ax.set_ylabel("Task Progress")
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
     if title is not None:
         ax.set_title(title)
     if add_legend:
