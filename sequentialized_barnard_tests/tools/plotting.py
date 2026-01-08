@@ -480,9 +480,10 @@ def plot_model_comparison(
         if mode == "success_rate":
             samples = draw_samples_from_beta_posterior(result_array, rng)
         elif mode == "task_progress":
-            samples = draw_samples_from_dirichlet_posterior(
-                result_array, progress_bins, rng
-            )
+            # samples = draw_samples_from_dirichlet_posterior(
+            #     result_array, progress_bins, rng
+            # )
+            samples = result_array  # Use the raw progress values for plotting instead of sampling from the posterior. Consistent with the LBM 1.0 paper.
         else:
             raise ValueError(f"Unknown mode: {mode}")
         posterior_samples.append(samples)
