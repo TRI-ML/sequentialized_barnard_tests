@@ -1,6 +1,6 @@
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
-from matplotlib.cm import get_cmap
+from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 import warnings
 import numpy as np
@@ -411,10 +411,13 @@ def plot_model_comparison(
     result_arrays: List[np.ndarray],
     cld_letters: List[str],
     rng: np.random.Generator,
-    mode: str = "success_rate",  # "success_rate" or "task_progress"
+    mode: Literal["success_rate", "task_progress"] = "success_rate",
     progress_bins: Optional[np.ndarray] = None,
     output_path: Optional[str] = None,
     title: Optional[str] = None,
+    show_empirical_means=False,
+    overlay_on_bars=False,
+    use_raw_progress_distributions=False,
     add_legend: bool = False,
     unit_width: int = 6,
     height: int = 4,
@@ -430,10 +433,18 @@ def plot_model_comparison(
         rng: A numpy random Generator instance for posterior sampling.
         mode: Mode of the result arrays. "success_rate" for binary success/failure
             arrays, "task_progress" for progress arrays. Defaults to "success_rate".
-        progress_bins: If mode is "task_progress", the unique progress bins. Defaults to None.
+        progress_bins: If mode is "task_progress", the unique progress bins.
+            Make sure to supply all possible values the task progress can take, even if
+            some bins have zero count in the result arrays. Defaults to None.
         output_path: Optional file path to save the plot. If None, the plot will not
             be saved but returned as a matplotlib Figure object. Defaults to None.
         title: Optional title for the plot. Defaults to None.
+        show_empirical_means: Whether to show dots representing empirical averages of data.
+            Defaults to False.
+        overlay_on_bars: Whether to display bar plots too. Defaults to False.
+        use_raw_progress_distributions: Whether to use raw progress distributions for violins
+            instead of sampling from the posterior. Only applicable when mode is "task_progress".
+            Defaults to False.
         add_legend: Whether to show legend on the plot. Defaults to False.
         unit_width: Figure width per model. Defaults to 6.
         height: Figure height. Defaults to 4.
@@ -478,12 +489,22 @@ def plot_model_comparison(
 
     for result_array in result_arrays:
         if mode == "success_rate":
+            if use_raw_progress_distributions:
+                raise ValueError(
+                    "use_raw_progress_distributions should be False when mode is 'success_rate'."
+                )
             samples = draw_samples_from_beta_posterior(result_array, rng)
         elif mode == "task_progress":
-            # samples = draw_samples_from_dirichlet_posterior(
-            #     result_array, progress_bins, rng
-            # )
-            samples = result_array  # Use the raw progress values for plotting instead of sampling from the posterior. Consistent with the LBM 1.0 paper.
+            if use_raw_progress_distributions:
+                # Use raw data as samples. Good for visualizing the original multi-modal distribution of progress.
+                samples = result_array
+            else:
+                # Use posterior samples to focus on the uncertainty of the mean estimate of progress.
+                samples = draw_samples_from_dirichlet_posterior(
+                    result_array,
+                    progress_bins,
+                    rng,
+                )
         else:
             raise ValueError(f"Unknown mode: {mode}")
         posterior_samples.append(samples)
@@ -491,13 +512,16 @@ def plot_model_comparison(
 
     fig, ax = plt.subplots(figsize=(max(unit_width, num_models), height), dpi=dpi)
 
-    cmap = get_cmap("tab10")
+    cmap = plt.get_cmap("tab10")
     colors = [cmap(i % 10) for i in range(num_models)]
 
+    show_posterior_means = True
+    if mode == "task_progress" and use_raw_progress_distributions:
+        show_posterior_means = False
     parts = ax.violinplot(
         posterior_samples,
         positions=np.arange(num_models),
-        showmeans=True,
+        showmeans=show_posterior_means,
         showmedians=False,
         showextrema=False,
         widths=0.8,
@@ -505,11 +529,14 @@ def plot_model_comparison(
     for pc, color in zip(parts["bodies"], colors):
         pc.set_facecolor(color)
         pc.set_alpha(0.6)
-    parts["cmeans"].set_color("black")
-    parts["cmeans"].set_linewidth(0.8)
+        pc.set_zorder(2)
+    if show_posterior_means:
+        parts["cmeans"].set_zorder(3)
+        parts["cmeans"].set_color("black")
+        parts["cmeans"].set_linewidth(0.8)
 
     # Add CLD labels
-    for i, (x, y, label) in enumerate(zip(np.arange(num_models), means, cld_letters)):
+    for _, (x, y, label) in enumerate(zip(np.arange(num_models), means, cld_letters)):
         ax.text(
             x + 0.15,
             y + 0.03,
@@ -519,6 +546,31 @@ def plot_model_comparison(
             color="black",
             verticalalignment="center",
             zorder=4,
+        )
+
+    # Add dots for sample means if requested
+    empirical_means = [result.mean() for result in result_arrays]
+    if show_empirical_means:
+        ax.scatter(
+            np.arange(num_models),
+            empirical_means,
+            edgecolors="black",
+            facecolors="darkgrey",
+            label="Observed Results",
+            zorder=4,
+        )
+
+    # Optional bars behind violins
+    if overlay_on_bars:
+        ax.bar(
+            np.arange(num_models),
+            empirical_means,
+            width=0.6,
+            color=colors,
+            alpha=0.25,
+            edgecolor="black",
+            linewidth=0.5,
+            zorder=1,  # behind violins
         )
 
     ax.set_xticks(np.arange(num_models))
@@ -533,7 +585,26 @@ def plot_model_comparison(
     if title is not None:
         ax.set_title(title)
     if add_legend:
-        ax.legend(parts["bodies"], model_name_list, loc="best")
+        # Make clean legend entries
+        handles = []
+        if show_posterior_means:
+            posterior_mean_line = Line2D(
+                [0], [0], color="black", lw=0.8, label="Posterior mean"
+            )
+            handles.append(posterior_mean_line)
+        if show_empirical_means:
+            empirical_handle = Line2D(
+                [0],
+                [0],
+                marker="o",
+                linestyle="",
+                markerfacecolor="darkgrey",
+                markeredgecolor="black",
+                label="Empirical mean",
+            )
+            handles.append(empirical_handle)
+        ax.legend(handles=handles, loc="best")
+
     plt.tight_layout()
 
     if output_path is not None:
