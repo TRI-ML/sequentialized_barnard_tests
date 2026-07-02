@@ -51,6 +51,7 @@ class StepTest(SequentialTestBase):
         shape_parameter: float = 0.0,
         use_p_norm: bool = False,
         random_seed: Optional[int] = None,
+        custom_differential_risk_budget: Optional[np.array] = None,
         verbose: bool = False,
     ) -> None:
         """Initializes the test object.
@@ -82,6 +83,7 @@ class StepTest(SequentialTestBase):
         self.alpha = alpha
         self.shape_parameter = shape_parameter
         self.use_p_norm = use_p_norm
+        self.custom_differential_risk_budget = custom_differential_risk_budget
 
         # Try to assign policy based on attributes
         try:
@@ -358,6 +360,8 @@ class StepTest(SequentialTestBase):
                 str(self.shape_parameter),
                 "--use_p_norm",
                 str(self.use_p_norm),
+                "--custom_differential_risk_budget", 
+                str(self.custom_differential_risk_budget),
             ]
             print(f"Running synthesis command: {' '.join(cmd)}")
             result = subprocess.run(cmd, cwd=script_dir, capture_output=False)
