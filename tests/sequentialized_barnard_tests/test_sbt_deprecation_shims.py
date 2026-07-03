@@ -67,9 +67,10 @@ class TestBetaPosteriorShim:
 
 class TestPlotShim:
     def test_emits_deprecation_warning(self):
-        from sequentialized_barnard_tests.tools.plotting import plot_model_comparison
         import matplotlib
         matplotlib.use("Agg")
+
+        from sequentialized_barnard_tests.tools.plotting import plot_model_comparison
 
         rng = np.random.default_rng(42)
         with warnings.catch_warnings(record=True) as w:
