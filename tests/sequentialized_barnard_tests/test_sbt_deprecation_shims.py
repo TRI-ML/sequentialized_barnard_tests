@@ -3,7 +3,6 @@
 import warnings
 
 import numpy as np
-import pytest
 
 import statistical_comparison_helpers as sch
 
