@@ -6,7 +6,7 @@ setup(
     description="Sequential statistical hypothesis testing for two-by-two contingency tables.",
     authors=["David Snyder", "Haruki Nishimura"],
     author_emails=["dasnyder@princeton.edu", "haruki.nishimura@tri.global"],
-    license="CC BY-NC 4.0",
+    license="CC-BY-NC-4.0",
     packages=find_packages(),
     package_data={
         "sequentialized_barnard_tests": [
