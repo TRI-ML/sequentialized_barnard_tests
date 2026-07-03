@@ -74,15 +74,19 @@ class TestPlotShim:
 
         rng = np.random.default_rng(42)
         with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+            warnings.simplefilter("ignore")
+            warnings.simplefilter("always", DeprecationWarning)
             fig = plot_model_comparison(
                 ["A", "B"],
                 [np.array([1, 0, 1]), np.array([0, 1, 0])],
                 ["a", "b"],
                 rng,
             )
-            assert len(w) == 1
-            assert issubclass(w[0].category, DeprecationWarning)
+            assert any(
+                issubclass(x.category, DeprecationWarning)
+                and "sequentialized_barnard_tests.tools.plotting.plot_model_comparison" in str(x.message)
+                for x in w
+            )
 
         import matplotlib.pyplot as plt
         plt.close(fig)
