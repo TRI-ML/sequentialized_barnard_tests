@@ -1,5 +1,7 @@
 from typing import Dict, List, Optional, Tuple, Union
 
+import warnings
+
 from matplotlib.cm import get_cmap
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,93 +10,26 @@ from scipy import stats
 from sequentialized_barnard_tests import Decision, Hypothesis
 from sequentialized_barnard_tests.step import MirroredStepTest
 
+import statistical_comparison_helpers as _sch
+
 
 def compact_letter_display(
     significant_pair_list: List[Tuple[str, str]],
     sorted_model_list: List[str],
 ) -> List[str]:
     """Generates Compact Letter Display (CLD) given a list of significant
-    pairs and a list of models. CLD is Based on "An Algorithm for a
-    Letter-Based Representation of All-Pairwise Comparisons" by Piepho
-    (2004).
+    pairs and a list of models.
 
-    Args:
-        significant_pair_list: A list containing tuples of model names that
-            were deemed significantly different by each A/B test.
-        sorted_model_list: A list of model names sorted by performance in
-            descending order.
-
-    Returns:
-        A list of letters representing CLD for the corresponding models.
+    .. deprecated::
+        Use ``statistical_comparison_helpers.compact_letter_display`` instead.
     """
-    num_models = len(sorted_model_list)
-
-    # Map model names to indices.
-    model_to_index = {model: idx for idx, model in enumerate(sorted_model_list)}
-    # Convert significant pairs from names to indices.
-    significant_index_pairs = [
-        (model_to_index[m1], model_to_index[m2]) for m1, m2 in significant_pair_list
-    ]
-
-    # --- Inner helper to remove redundant columns ---
-    def remove_redundant_columns(matrix):
-        changed = True
-        while changed:
-            changed = False
-            for i in range(len(matrix)):
-                for j in range(len(matrix)):
-                    if i != j:
-                        indices_i = {idx for idx, char in enumerate(matrix[i]) if char}
-                        indices_j = {idx for idx, char in enumerate(matrix[j]) if char}
-                        if indices_i.issubset(indices_j):
-                            matrix.pop(i)
-                            changed = True
-                            break
-                if changed:
-                    break
-        return matrix
-
-    # --- Main algorithm ---
-    # Start with a single column of 'a's for all models.
-    letter_matrix = [["a"] * num_models]
-
-    # For each significant pair, update the letter matrix.
-    for model_idx1, model_idx2 in significant_index_pairs:
-        while any(col[model_idx1] and col[model_idx2] for col in letter_matrix):
-            for col_index, letter_column in enumerate(letter_matrix):
-                if letter_column[model_idx1] and letter_column[model_idx2]:
-                    new_column = letter_column.copy()
-                    new_column[model_idx1] = ""
-                    letter_column[model_idx2] = ""
-                    letter_matrix[col_index] = letter_column
-                    letter_matrix.append(new_column)
-                    letter_matrix = remove_redundant_columns(letter_matrix)
-                    break  # re-check with the while condition
-
-    # --- Reassign letters based on sorted columns ---
-    def first_nonempty_position(column):
-        for pos, char in enumerate(column):
-            if char:
-                return pos
-        return len(column)
-
-    letter_matrix.sort(key=first_nonempty_position)
-
-    for idx, column in enumerate(letter_matrix):
-        replacement_letter = chr(ord("a") + idx)
-        letter_matrix[idx] = [replacement_letter if char else "" for char in column]
-
-    # --- Build final CLD output for each model ---
-    final_display = []
-    for model_idx in range(num_models):
-        letters = "".join(
-            letter_matrix[col_idx][model_idx]
-            for col_idx in range(len(letter_matrix))
-            if letter_matrix[col_idx][model_idx]
-        )
-        final_display.append(letters)
-
-    return final_display
+    warnings.warn(
+        "sequentialized_barnard_tests.tools.plotting.compact_letter_display is "
+        "deprecated. Use statistical_comparison_helpers.compact_letter_display instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _sch.compact_letter_display(significant_pair_list, sorted_model_list)
 
 
 def compare_success_and_get_cld(
@@ -187,7 +122,7 @@ def compare_success_and_get_cld(
             reverse=True,
         )
     ]
-    letters_list = compact_letter_display(
+    letters_list = _sch.compact_letter_display(
         input_list_to_cld, models_sorted_by_success_rates
     )
     if verbose:
@@ -243,25 +178,20 @@ def draw_samples_from_beta_posterior(
     beta_prior: float = 1,
 ) -> np.ndarray:
     """Draw samples from the beta posterior distribution given a success array.
-    These samples can be used to estimate the posterior distribution of the
-    success rate of a Bernoulli process. Note that the default prior parameters
-    of (1, 1) correspond to a uniform prior.
 
-    Args:
-        success_array: A binary array with True/False indicating success/failure.
-        rng: A numpy random Generator instance.
-        num_samples: Optional number of samples to draw. Defaults to 10000.
-        alpha_prior: Optional alpha parameter of the beta prior. Defaults to 1.
-        beta_prior: Optional beta parameter of the beta prior. Defaults to 1.
-
-    Returns:
-        Samples drawn from the beta posterior distribution.
+    .. deprecated::
+        Use ``statistical_comparison_helpers.draw_samples_from_beta_posterior`` instead.
     """
-    n_trials = len(success_array)
-    n_successes = np.sum(success_array)
-    n_failures = n_trials - n_successes
-    posterior = stats.beta(alpha_prior + n_successes, beta_prior + n_failures)
-    return posterior.rvs(num_samples, random_state=rng)
+    warnings.warn(
+        "sequentialized_barnard_tests.tools.plotting.draw_samples_from_beta_posterior "
+        "is deprecated. Use statistical_comparison_helpers.draw_samples_from_beta_posterior instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _sch.draw_samples_from_beta_posterior(
+        success_array, rng, num_samples=num_samples,
+        alpha_prior=alpha_prior, beta_prior=beta_prior,
+    )
 
 
 def plot_model_comparison(
@@ -276,81 +206,31 @@ def plot_model_comparison(
     height: int = 4,
     dpi: int = 100,
 ) -> Union[None, plt.Figure]:
-    """Makes a violin plot of success rate estimates with corresponding CLD letters
-    for policy comparison.
+    """Makes a violin plot of success rate estimates with corresponding CLD letters.
 
-    Args:
-        model_name_list: A list of model names.
-        success_arrays: A list of arrays indicating success/failure for each model.
-        cld_letters: A list of CLD letters corresponding to each model.
-        rng: A numpy random Generator instance for posterior sampling.
-        output_path: Optional file path to save the plot. If None, the plot will not
-            be saved but returned as a matplotlib Figure object. Defaults to None.
-        title: Optional title for the plot. Defaults to None.
-        add_legend: Whether to show legend on the plot. Defaults to False.
-        unit_width: Figure width per model. Defaults to 6.
-        height: Figure height. Defaults to 4.
-        dpi: Resolution of the saved plot. Defaults to 100.
-
-    Returns:
-        If output_path is None, returns a matplotlib Figure object containing
-        the plot. Otherwise, saves the plot to the specified path and returns None.
+    .. deprecated::
+        Use ``statistical_comparison_helpers.plot_model_comparison`` instead.
     """
-    num_models = len(model_name_list)
-
-    posterior_samples = []
-    means = []
-
-    for success_array in success_arrays:
-        samples = draw_samples_from_beta_posterior(success_array, rng)
-        posterior_samples.append(samples)
-        means.append(np.mean(samples))
-
-    fig, ax = plt.subplots(figsize=(max(unit_width, num_models), height), dpi=dpi)
-
-    cmap = get_cmap("tab10")
-    colors = [cmap(i % 10) for i in range(num_models)]
-
-    parts = ax.violinplot(
-        posterior_samples,
-        positions=np.arange(num_models),
-        showmeans=True,
-        showmedians=False,
-        showextrema=False,
-        widths=0.8,
+    warnings.warn(
+        "sequentialized_barnard_tests.tools.plotting.plot_model_comparison is "
+        "deprecated. Use statistical_comparison_helpers.plot_model_comparison instead.",
+        DeprecationWarning,
+        stacklevel=2,
     )
-    for pc, color in zip(parts["bodies"], colors):
-        pc.set_facecolor(color)
-        pc.set_alpha(0.6)
-    parts["cmeans"].set_color("black")
-    parts["cmeans"].set_linewidth(0.8)
+    from statistical_comparison_helpers.plotting import plot_model_comparison as _plot
+    from statistical_comparison_helpers.posterior import Binary
 
-    # Add CLD labels
-    for i, (x, y, label) in enumerate(zip(np.arange(num_models), means, cld_letters)):
-        ax.text(
-            x + 0.15,
-            y + 0.03,
-            label,
-            fontsize=12,
-            fontweight="bold",
-            color="black",
-            verticalalignment="center",
-            zorder=4,
-        )
-
-    ax.set_xticks(np.arange(num_models))
-    ax.set_xticklabels(model_name_list, rotation=0, ha="center")
-    ax.set_ylim(0.0, 1.0)
-    ax.set_ylabel("Success Rate")
-    if title is not None:
-        ax.set_title(title)
-    if add_legend:
-        ax.legend(parts["bodies"], model_name_list, loc="best")
-    plt.tight_layout()
-
-    if output_path is not None:
-        plt.savefig(output_path, dpi=300)
-        plt.close()
-        print(f"Saved a PNG plot to {output_path}")
-    else:
-        return fig
+    return _plot(
+        model_name_list,
+        success_arrays,
+        cld_letters,
+        rng,
+        score=Binary(),
+        plot_mode="posterior",
+        output_path=output_path,
+        title=title,
+        add_legend=add_legend,
+        unit_width=unit_width,
+        height=height,
+        dpi=dpi,
+    )
