@@ -23,7 +23,7 @@ setup(
         "numpy>=1.20",
         "pytest",
         "scipy",
-        "statistical-comparison-core",
+        "statistical-comparison-core>=0.2.0,<0.3",
         "statistical-comparison-helpers",
         "tqdm",
     ],
