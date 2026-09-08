@@ -25,6 +25,13 @@ from sequentialized_barnard_tests.base import (
 )
 
 
+# Kept in sync with statistical_comparison_core.MirroredTestMixin._ALLOWED_INFERENCE_MODES;
+# a drift-guard test asserts equality without importing the SCC private attribute in production.
+_ALLOWED_INFERENCE_MODES = frozenset(
+    {"comparison", "ranking", "ranking_no_ties"}
+)
+
+
 class StepTest(SequentialTestBase):
     """STEP test for comparing two Bernoulli distributions (2x2 Contingency Table).
 
@@ -52,6 +59,8 @@ class StepTest(SequentialTestBase):
         use_p_norm: bool = False,
         random_seed: Optional[int] = None,
         verbose: bool = False,
+        *,
+        _policy_alpha: Optional[float] = None,
     ) -> None:
         """Initializes the test object.
 
@@ -63,6 +72,14 @@ class StepTest(SequentialTestBase):
             use_p_norm (bool, optional): Toggle use of p_norm vs zeta function shape families. Defaults to False.
             random_seed (int, optional): Seed for internal randomness of the test. Defaults to None.
             verbose (bool, optional): If True, print the outputs to stdout. Defaults to False. Defaults to False.
+            _policy_alpha (float, optional): Internal use only. Alpha used
+                for policy directory selection and synthesis. Defaults to
+                ``alpha`` so ``StepTest`` behavior is unchanged. Subclasses
+                such as ``MirroredStepTest`` may override this to run the
+                declared wrapper alpha with a different policy alpha (for
+                example ``alpha / 2`` under
+                ``inference_mode='ranking'``) without changing
+                ``self.alpha``.
 
         Raises:
             ValueError: If the n_max and alpha inputs are invalid
@@ -80,6 +97,7 @@ class StepTest(SequentialTestBase):
         # Assign attributes
         self.n_max = n_max
         self.alpha = alpha
+        self._policy_alpha = alpha if _policy_alpha is None else _policy_alpha
         self.shape_parameter = shape_parameter
         self.use_p_norm = use_p_norm
 
@@ -330,7 +348,7 @@ class StepTest(SequentialTestBase):
 
         policy_path = os.path.join(
             os.path.dirname(__file__),
-            f"policies/n_max_{self.n_max}_alpha_{self.alpha}_shape_parameter_{self.shape_parameter}_pnorm_{self.use_p_norm}/",
+            f"policies/n_max_{self.n_max}_alpha_{self._policy_alpha}_shape_parameter_{self.shape_parameter}_pnorm_{self.use_p_norm}/",
             "policy_compressed.pkl",
         )
 
@@ -347,7 +365,7 @@ class StepTest(SequentialTestBase):
                 "--n_max",
                 str(self.n_max),
                 "--alpha",
-                str(self.alpha),
+                str(self._policy_alpha),
                 "--n_points",
                 "129",  # default value, could be parameterized
                 "--lambda_value",
@@ -396,6 +414,7 @@ class MirroredStepTest(StepTest):
         use_p_norm (bool): whether to use p_norm shape (True) or partial sums of the zeta function (False).
         policy (List[ArrayLike]): the evaluation decision-making algorithm. Length n_max, each element is an associated array.
         need_new_policy (bool): indicator that a policy has not been previously synthesized for these test parameters.
+        inference_mode (str): the inference mode for the mirrored STEP test. One of ``"comparison"``, ``"ranking"``, or ``"ranking_no_ties"``.
     """
 
     def __init__(
@@ -407,6 +426,8 @@ class MirroredStepTest(StepTest):
         use_p_norm: bool = False,
         random_seed: int = 42,
         verbose: bool = False,
+        *,
+        inference_mode: str = "comparison",
     ) -> None:
         """Initializes the test object.
 
@@ -418,7 +439,28 @@ class MirroredStepTest(StepTest):
             use_p_norm (bool, optional): Toggle use of p_norm vs zeta function shape families. Defaults to False.
             random_seed (int, optional): Seed for internal randomness of the test. Defaults to None.
             verbose (bool, optional): If True, print the outputs to stdout. Defaults to False. Defaults to False.
+            inference_mode (str, optional): Which inference the mirrored STEP
+                test supports. One of ``"comparison"`` (default; equality
+                belongs to the null/baseline side; policy alpha equals the
+                declared ``alpha``), ``"ranking"`` (conservative two-sided
+                ranking; policy alpha is ``alpha / 2`` while ``self.alpha``
+                stays at the unhalved declared value), or
+                ``"ranking_no_ties"`` (ranking over the restricted parameter
+                space ``mu_0 != mu_1``; policy alpha equals the declared
+                ``alpha``). STEP has no p-value, so this keyword only
+                controls policy selection and synthesis alpha, and does
+                not change decision logic or policy format. The vocabulary
+                matches ``statistical_comparison_core.MirroredTestMixin``.
+
+        Raises:
+            ValueError: If ``inference_mode`` is not one of the allowed values.
         """
+        if inference_mode not in _ALLOWED_INFERENCE_MODES:
+            raise ValueError(
+                f"Invalid inference_mode {inference_mode!r}. "
+                f"Valid values are: {sorted(_ALLOWED_INFERENCE_MODES)}."
+            )
+        policy_alpha = alpha / 2.0 if inference_mode == "ranking" else alpha
         super().__init__(
             alternative,
             n_max,
@@ -427,7 +469,9 @@ class MirroredStepTest(StepTest):
             use_p_norm,
             random_seed,
             verbose,
+            _policy_alpha=policy_alpha,
         )
+        self.inference_mode = inference_mode
 
     def step(
         self,
