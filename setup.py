@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="sequentialized_barnard_tests",
-    version="0.0.6",
+    version="0.0.7",
     description="Sequential statistical hypothesis testing for two-by-two contingency tables.",
     authors=["David Snyder", "Haruki Nishimura"],
     author_emails=["dasnyder@princeton.edu", "haruki.nishimura@tri.global"],
@@ -23,7 +23,7 @@ setup(
         "numpy>=1.20",
         "pytest",
         "scipy",
-        "statistical-comparison-core>=0.2.0,<0.3",
+        "statistical-comparison-core>=0.2.1,<0.3",
         "statistical-comparison-helpers",
         "tqdm",
     ],
