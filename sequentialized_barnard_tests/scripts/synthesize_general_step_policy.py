@@ -36,6 +36,45 @@ from sequentialized_barnard_tests.utils.utils_step import (
 )
 
 
+def _solve_policy_linear_program(
+    c_vec,
+    features,
+    b_ub,
+    a_eq,
+    b_eq,
+    bounds,
+    options,
+):
+    """Solve the policy LP, retrying numerically fragile HiGHS failures."""
+    attempts = (
+        ("highs", {}),
+        ("highs-ipm", {"method": "highs-ipm"}),
+    )
+    failures = []
+
+    for name, extra_kwargs in attempts:
+        # The first attempt intentionally uses SciPy's default HiGHS path.
+        res = linprog(
+            c_vec,
+            features,
+            b_ub,
+            A_eq=a_eq,
+            b_eq=b_eq,
+            bounds=bounds,
+            options=options,
+            **extra_kwargs,
+        )
+        if res.success and res.x is not None:
+            return res
+        failures.append(f"{name}: status={res.status}, message={res.message}")
+
+    raise RuntimeError(
+        "STEP policy synthesis LP failed. "
+        + " | ".join(failures)
+        + f" | c_shape={c_vec.shape}, features_shape={features.shape}"
+    )
+
+
 def run_step_policy_synthesis(
     n_max: int,
     alpha: float,
@@ -297,21 +336,15 @@ def run_step_policy_synthesis(
                     print(t)
                     print(c_vec.shape)
                 linprog_options = {"disp": False}
-                try:
-                    res_linprog = linprog(
-                        c_vec,
-                        FEATURES,
-                        b_ub,
-                        A_eq=A_eq,
-                        b_eq=b_eq,
-                        bounds=bounds,
-                        options=linprog_options,
-                    )
-                except:
-                    print(c_vec.shape)
-                    print(feature_counter)
-                    print()
-
+                res_linprog = _solve_policy_linear_program(
+                    c_vec,
+                    FEATURES,
+                    b_ub,
+                    A_eq,
+                    b_eq,
+                    bounds,
+                    linprog_options,
+                )
                 key_weights = res_linprog.x
 
             # Reconstruct key_weights in original form
