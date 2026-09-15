@@ -1,9 +1,9 @@
-"""Tests for the ``inference_mode`` keyword on :class:`MirroredStepTest`.
+"""Tests for the ``inference_mode`` keyword on mirrored SBT tests.
 
-STEP has no p-value, so the mirrored inference mode only controls policy
-selection and synthesis alpha, not decision logic or policy format. These
-tests monkeypatch policy loading or synthesis boundaries so no real policy
-synthesis is triggered and no policy directories are generated on disk.
+STEP has no p-value, so its mirrored inference mode only controls policy
+selection and synthesis alpha, not decision logic or policy format. Lai uses
+the same mode vocabulary to choose the effective one-sided alpha used for
+regularizer calibration.
 """
 
 import os
@@ -11,6 +11,8 @@ import os
 import pytest
 
 from sequentialized_barnard_tests import Hypothesis
+from sequentialized_barnard_tests.auto import get_mirrored_test, get_test
+from sequentialized_barnard_tests.lai import LaiTest, MirroredLaiTest
 from sequentialized_barnard_tests.step import (
     _ALLOWED_INFERENCE_MODES,
     MirroredStepTest,
@@ -79,6 +81,21 @@ def test_ranking_halves_policy_alpha_and_preserves_declared_alpha(
     )
     assert m.alpha == pytest.approx(0.05)
     assert m._policy_alpha == pytest.approx(0.025)
+    assert m.inference_mode == "ranking"
+
+
+def test_lai_ranking_halves_effective_alpha_and_preserves_declared_alpha():
+    m = MirroredLaiTest(
+        alternative=Hypothesis.P0MoreThanP1,
+        n_max=800,
+        alpha=0.05,
+        calibrate_regularizer=False,
+        use_offline_calibration=False,
+        inference_mode="ranking",
+    )
+    assert m.alpha == pytest.approx(0.05)
+    assert m._test_alpha == pytest.approx(0.025)
+    assert m.calibration_correction == pytest.approx(0.025 / 50.0)
     assert m.inference_mode == "ranking"
 
 
@@ -165,6 +182,20 @@ def test_ranking_no_ties_uses_full_alpha(prevent_synthesis):
     assert m.inference_mode == "ranking_no_ties"
 
 
+def test_lai_ranking_no_ties_uses_full_effective_alpha():
+    m = MirroredLaiTest(
+        alternative=Hypothesis.P0MoreThanP1,
+        n_max=800,
+        alpha=0.05,
+        calibrate_regularizer=False,
+        use_offline_calibration=False,
+        inference_mode="ranking_no_ties",
+    )
+    assert m.alpha == pytest.approx(0.05)
+    assert m._test_alpha == pytest.approx(0.05)
+    assert m.inference_mode == "ranking_no_ties"
+
+
 def test_ranking_no_ties_matches_comparison_policy_alpha(prevent_synthesis):
     m_cmp = MirroredStepTest(
         alternative=Hypothesis.P0MoreThanP1,
@@ -196,6 +227,107 @@ def test_invalid_inference_mode_raises_and_lists_valid_values():
     assert "bogus" in message
     for mode in ("comparison", "ranking", "ranking_no_ties"):
         assert mode in message
+
+
+def test_invalid_lai_inference_mode_raises_and_lists_valid_values():
+    with pytest.raises(ValueError) as excinfo:
+        MirroredLaiTest(
+            alternative=Hypothesis.P0MoreThanP1,
+            n_max=800,
+            alpha=0.05,
+            calibrate_regularizer=False,
+            use_offline_calibration=False,
+            inference_mode="bogus",
+        )
+    message = str(excinfo.value)
+    assert "bogus" in message
+    for mode in ("comparison", "ranking", "ranking_no_ties"):
+        assert mode in message
+
+
+def test_auto_forwards_inference_mode_to_lai_branch():
+    m = get_mirrored_test(
+        n_max=800,
+        alternative=Hypothesis.P0MoreThanP1,
+        alpha=0.05,
+        calibrate_regularizer=False,
+        use_offline_calibration=False,
+        inference_mode="ranking",
+    )
+    assert isinstance(m, MirroredLaiTest)
+    assert m.alpha == pytest.approx(0.05)
+    assert m._test_alpha == pytest.approx(0.025)
+    assert m.inference_mode == "ranking"
+
+
+def test_auto_default_critical_n_max_selects_step_at_boundary(
+    prevent_synthesis,
+):
+    m = get_mirrored_test(
+        n_max=500,
+        alternative=Hypothesis.P0MoreThanP1,
+        alpha=0.05,
+    )
+    assert isinstance(m, MirroredStepTest)
+
+
+def test_auto_default_critical_n_max_selects_lai_above_boundary():
+    m = get_mirrored_test(
+        n_max=501,
+        alternative=Hypothesis.P0MoreThanP1,
+        alpha=0.05,
+        calibrate_regularizer=False,
+        use_offline_calibration=False,
+    )
+    assert isinstance(m, MirroredLaiTest)
+
+
+def test_auto_custom_critical_n_max_selects_regular_lai_branch():
+    m = get_test(
+        n_max=200,
+        alternative=Hypothesis.P0MoreThanP1,
+        alpha=0.05,
+        critical_n_max=100,
+        calibrate_regularizer=False,
+        use_offline_calibration=False,
+    )
+    assert isinstance(m, LaiTest)
+
+
+def test_auto_custom_critical_n_max_selects_regular_step_branch(
+    prevent_synthesis,
+):
+    m = get_test(
+        n_max=200,
+        alternative=Hypothesis.P0MoreThanP1,
+        alpha=0.05,
+        critical_n_max=250,
+    )
+    assert isinstance(m, StepTest)
+
+
+def test_auto_custom_critical_n_max_forwards_kwargs_to_mirrored_lai():
+    m = get_mirrored_test(
+        n_max=200,
+        alternative=Hypothesis.P0MoreThanP1,
+        alpha=0.05,
+        critical_n_max=100,
+        calibrate_regularizer=False,
+        use_offline_calibration=False,
+        inference_mode="ranking",
+    )
+    assert isinstance(m, MirroredLaiTest)
+    assert m._test_alpha == pytest.approx(0.025)
+
+
+def test_auto_negative_critical_n_max_raises():
+    with pytest.raises(ValueError, match="critical_n_max"):
+        get_mirrored_test(
+            n_max=200,
+            alternative=Hypothesis.P0MoreThanP1,
+            alpha=0.05,
+            critical_n_max=-1,
+        )
 
 
 # --- StepTest is intentionally not extended with inference_mode ---

@@ -23,13 +23,7 @@ from sequentialized_barnard_tests.base import (
     SequentialTestBase,
     TestResult,
 )
-
-
-# Kept in sync with statistical_comparison_core.MirroredTestMixin._ALLOWED_INFERENCE_MODES;
-# a drift-guard test asserts equality without importing the SCC private attribute in production.
-_ALLOWED_INFERENCE_MODES = frozenset(
-    {"comparison", "ranking", "ranking_no_ties"}
-)
+from sequentialized_barnard_tests.inference_modes import _ALLOWED_INFERENCE_MODES
 
 
 class StepTest(SequentialTestBase):

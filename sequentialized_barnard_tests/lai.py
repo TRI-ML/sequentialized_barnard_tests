@@ -11,7 +11,7 @@ import concurrent.futures
 import os
 import warnings
 from functools import partial
-from typing import Dict, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -24,6 +24,7 @@ from sequentialized_barnard_tests.base import (
     SequentialTestBase,
     TestResult,
 )
+from sequentialized_barnard_tests.inference_modes import _ALLOWED_INFERENCE_MODES
 from sequentialized_barnard_tests.utils.utils_lai import (
     calculate_gamma,
     calculate_robust_zeta,
@@ -59,6 +60,8 @@ class LaiTest(SequentialTestBase):
         n_calibration_sequences: int = 10000,
         calibration_seed: int = 42,
         verbose: bool = False,
+        *,
+        _test_alpha: Optional[float] = None,
     ) -> None:
         """Initializes the test object.
 
@@ -82,28 +85,37 @@ class LaiTest(SequentialTestBase):
                 use this seed in order to generate the sequences. Defaults to 42.
             verbose (bool, optional): If True, print the outputs to stdout.
                 Defaults to False.
+            _test_alpha (float, optional): Internal use only. Alpha used to
+                calibrate the Lai regularizer. Defaults to ``alpha`` so
+                ``LaiTest`` behavior is unchanged. Mirrored wrappers may
+                override this to run with a more conservative one-sided
+                effective alpha while preserving the declared wrapper alpha.
 
         Raise:
             ValueError: If the inputs are invalid.
         """
 
+        test_alpha = alpha if _test_alpha is None else _test_alpha
         # Handle erroneous inputs
         try:
             assert n_max > 0
             assert 0.0 < alpha < 1.0
+            assert 0.0 < test_alpha < 1.0
             assert minimum_gap >= 0.0 and minimum_gap <= 1.0
         except:
             raise ValueError(
-                "Invalid inputs: MUST HAVE n_max > 0, alpha in (0., 1.), minimum_gap in [0., 1.]"
+                "Invalid inputs: MUST HAVE n_max > 0, alpha in (0., 1.), "
+                "_test_alpha in (0., 1.), minimum_gap in [0., 1.]"
             )
         # Assign attributes
         self.n_max = n_max
         self.alpha = alpha
+        self._test_alpha = test_alpha
         self.alternative = alternative
         self.minimum_gap = minimum_gap
 
         # Assign derived attributes
-        self.calibration_correction = np.minimum(alpha / 50.0, 1e-3)
+        self.calibration_correction = np.minimum(self._test_alpha / 50.0, 1e-3)
 
         # Initialize Lai uniparameter test attributes
         self._zeta = calculate_robust_zeta(minimum_gap)
@@ -325,7 +337,7 @@ class LaiTest(SequentialTestBase):
         target_error_count = stats.binom.ppf(
             self.calibration_correction,
             n_calibration_sequences,
-            self.alpha - self.calibration_correction,
+            self._test_alpha - self.calibration_correction,
         )
 
         # Binary search to converge on c
@@ -410,7 +422,10 @@ class LaiTest(SequentialTestBase):
         )
 
         # Obtain the value of c using the model.
-        log_c = log_slope(self.alpha) * np.log(self.n_max) + log_intercept(self.alpha)
+        log_c = (
+            log_slope(self._test_alpha) * np.log(self.n_max)
+            + log_intercept(self._test_alpha)
+        )
         # Make sure log_c < 0 so c < 1.
         log_c_clipped = np.clip(log_c, a_min=None, a_max=-1e-10)
 
@@ -483,6 +498,8 @@ class MirroredLaiTest(LaiTest):
         n_calibration_sequences: int = 10000,
         calibration_seed: int = 42,
         verbose: bool = False,
+        *,
+        inference_mode: str = "comparison",
     ) -> None:
         """Initializes the test object.
 
@@ -506,11 +523,28 @@ class MirroredLaiTest(LaiTest):
                 use this seed in order to generate the sequences. Defaults to 42.
             verbose (bool, optional): If True, print the outputs to stdout.
                 Defaults to False.
+            inference_mode (str, optional): Which inference the mirrored Lai
+                test supports. One of ``"comparison"`` (default; equality
+                belongs to the null/baseline side; effective alpha equals the
+                declared ``alpha``), ``"ranking"`` (conservative two-sided
+                ranking; effective alpha is ``alpha / 2`` while
+                ``self.alpha`` stays at the unhalved declared value), or
+                ``"ranking_no_ties"`` (ranking over the restricted parameter
+                space ``mu_0 != mu_1``; effective alpha equals the declared
+                ``alpha``). The vocabulary and alpha split match
+                ``MirroredStepTest``.
 
         Raise:
-            ValueError: If the inputs are invalid.
+            ValueError: If the inputs are invalid or ``inference_mode`` is
+                not one of the allowed values.
         """
 
+        if inference_mode not in _ALLOWED_INFERENCE_MODES:
+            raise ValueError(
+                f"Invalid inference_mode {inference_mode!r}. "
+                f"Valid values are: {sorted(_ALLOWED_INFERENCE_MODES)}."
+            )
+        test_alpha = alpha / 2.0 if inference_mode == "ranking" else alpha
         super().__init__(
             alternative,
             n_max,
@@ -522,7 +556,9 @@ class MirroredLaiTest(LaiTest):
             n_calibration_sequences,
             calibration_seed,
             verbose,
+            _test_alpha=test_alpha,
         )
+        self.inference_mode = inference_mode
 
     def step(
         self,
